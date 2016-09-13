@@ -1,0 +1,136 @@
+==========================================================================================================
+calculating 2x^6 - 3x^4 + 4x^2 - 3
+
+result, time
+
+          `int part_i_slowest(int)`             `int part_i_fast(int)`          `int part_i_fastest(int)`
+----------------------------------------------------------------------------------------------------------
+          3499680,       1.714e-05          3499680,        1.08e-07          3499680,         9.7e-08
+
+
+
+    `double part_i_slowest(double)`       `double part_i_fast(double)`    `double part_i_fastest(double)`
+-----------------------------------------------------------------------------------------------------------
+      3.49968e+06,        5.73e-07      3.49968e+06,        1.02e-07      3.49968e+06,           1e-07
+
+11 is prime.
+The number 11 is not a perfect square and returns a value of 44404 when inserted into the function f
+==========================================================================================================
+calculating 2x^6 - 3x^4 + 4x^2 - 3
+
+result, time
+
+          `int part_i_slowest(int)`             `int part_i_fast(int)`          `int part_i_fastest(int)`
+----------------------------------------------------------------------------------------------------------
+        961939773,         9.6e-07        961939773,         6.6e-08        961939773,           8e-08
+
+
+
+    `double part_i_slowest(double)`       `double part_i_fast(double)`    `double part_i_fastest(double)`
+-----------------------------------------------------------------------------------------------------------
+       9.6194e+08,        4.58e-07       9.6194e+08,           8e-08       9.6194e+08,         6.5e-08
+
+28 is not prime.
+The number 28 is not a perfect square and returns a value of 1847101 when inserted into the function f
+==========================================================================================================
+calculating 2x^6 - 3x^4 + 4x^2 - 3
+
+result, time
+
+          `int part_i_slowest(int)`             `int part_i_fast(int)`          `int part_i_fastest(int)`
+----------------------------------------------------------------------------------------------------------
+      -2147483648,        8.42e-07       -584631712,         7.1e-08       -584631712,         7.4e-08
+
+
+
+    `double part_i_slowest(double)`       `double part_i_fast(double)`    `double part_i_fastest(double)`
+-----------------------------------------------------------------------------------------------------------
+      1.65952e+10,        4.63e-07      1.65952e+10,        1.03e-07      1.65952e+10,           8e-08
+
+45 is not prime.
+The number 45 is not a perfect square and returns a value of 12309972 when inserted into the function f
+==========================================================================================================
+calculating 2x^6 - 3x^4 + 4x^2 - 3
+
+result, time
+
+          `int part_i_slowest(int)`             `int part_i_fast(int)`          `int part_i_fastest(int)`
+----------------------------------------------------------------------------------------------------------
+      -2147483648,        8.79e-07       -361058976,         6.9e-08       -361058976,         7.8e-08
+
+
+
+    `double part_i_slowest(double)`       `double part_i_fast(double)`    `double part_i_fastest(double)`
+-----------------------------------------------------------------------------------------------------------
+      7.83013e+15,        4.76e-07      7.83013e+15,        1.06e-07      7.83013e+15,         7.4e-08
+
+397 is prime.
+The number 397 is not a perfect square and returns a value of 1507977044 when inserted into the function f
+==========================================================================================================
+calculating 2x^6 - 3x^4 + 4x^2 - 3
+
+result, time
+
+          `int part_i_slowest(int)`             `int part_i_fast(int)`          `int part_i_fastest(int)`
+----------------------------------------------------------------------------------------------------------
+      -2147483648,        8.85e-07       -402784224,         7.1e-08       -402784224,         6.9e-08
+
+
+
+    `double part_i_slowest(double)`       `double part_i_fast(double)`    `double part_i_fastest(double)`
+-----------------------------------------------------------------------------------------------------------
+      1.92558e+17,        4.52e-07      1.92558e+17,        1.11e-07      1.92558e+17,         5.9e-08
+
+677 is prime.
+The number 677 is not a perfect square and returns a value of -1161942476 when inserted into the function f
+==========================================================================================================
+calculating 2x^6 - 3x^4 + 4x^2 - 3
+
+result, time
+
+          `int part_i_slowest(int)`             `int part_i_fast(int)`          `int part_i_fastest(int)`
+----------------------------------------------------------------------------------------------------------
+      -2147483648,        8.62e-07       -129610176,         7.2e-08       -129610176,         7.3e-08
+
+
+
+    `double part_i_slowest(double)`       `double part_i_fast(double)`    `double part_i_fastest(double)`
+-----------------------------------------------------------------------------------------------------------
+      1.47949e+18,        4.92e-07      1.47949e+18,        1.02e-07      1.47949e+18,           6e-08
+
+951 is not prime.
+The number 951 is not a perfect square and returns a value of 1400797988 when inserted into the function f
+==========================================================================================================
+calculating 2x^6 - 3x^4 + 4x^2 - 3
+
+result, time
+
+          `int part_i_slowest(int)`             `int part_i_fast(int)`          `int part_i_fastest(int)`
+----------------------------------------------------------------------------------------------------------
+      -2147483648,        8.28e-07      -2071637763,         6.8e-08      -2071637763,         7.5e-08
+
+
+
+    `double part_i_slowest(double)`       `double part_i_fast(double)`    `double part_i_fastest(double)`
+-----------------------------------------------------------------------------------------------------------
+      5.52477e+20,        4.64e-07      5.52477e+20,        1.06e-07      5.52477e+20,           8e-08
+
+2552 is not prime.
+The number 2552 is not a perfect square and returns a value of -1029852931 when inserted into the function f
+==========================================================================================================
+calculating 2x^6 - 3x^4 + 4x^2 - 3
+
+result, time
+
+          `int part_i_slowest(int)`             `int part_i_fast(int)`          `int part_i_fastest(int)`
+----------------------------------------------------------------------------------------------------------
+      -2147483648,        7.24e-07        879593088,         6.3e-08        879593088,         5.9e-08
+
+
+
+    `double part_i_slowest(double)`       `double part_i_fast(double)`    `double part_i_fastest(double)`
+-----------------------------------------------------------------------------------------------------------
+      1.43607e+23,        4.64e-07      1.43607e+23,        1.12e-07      1.43607e+23,           6e-08
+
+6447 is not prime.
+The number 6447 is not a perfect square and returns a value of -314716604 when inserted into the function f

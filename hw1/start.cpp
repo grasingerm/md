@@ -38,13 +38,13 @@ bool is_prime(int x);
 // declaration of input and output stream
 
 ifstream data_in("5input.txt"); // input data
-ofstream outs("5output.txt"); // output data
+ofstream data_out("5output.txt"); // output data
 
 // the main part of the program - should always be type "int"
 
 int main() {
 
-  #define outs cout // decide on output stream here
+  #define outs data_out // decide on output stream here
 
 	// variable declarations
     int i,j,k; // loop counters
