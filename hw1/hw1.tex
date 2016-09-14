@@ -1,0 +1,103 @@
+\documentclass{article}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{fancyvrb}
+\usepackage{tabularx}
+\usepackage{fancyref}
+\usepackage{enumitem}
+\usepackage[margin=0.75in]{geometry}
+
+\title{Molecular Simulation of Materials, Homework 1}
+\author{Matthew Grasinger}
+
+\begin{document}
+
+\lstset{language=C++,
+        basicstyle=\ttfamily,
+        keywordstyle=\color{blue}\ttfamily,
+        stringstyle=\color{red}\ttfamily,
+        commentstyle=\color{green}\ttfamily,
+        morecomment=[l][\color{magenta}]{\#},
+        breaklines=true,
+        postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}}
+}
+
+\pagenumbering{gobble}
+\vspace{3.5in}
+\maketitle
+\clearpage
+\pagenumbering{arabic}
+
+\section{Problem 1}
+
+\begin{enumerate}[label=\roman*)]
+  \item The polynomial computation was implemented in three templated functions of the signature \texttt{template <typename T> T f(const T)}.
+    Each of these three functions are described in \Fref{tab:parti} and the source code is presented in \Fref{sec:src1}.
+
+    \begin{table} \label{tab:parti}
+      \caption{Implementations of functions to calculate $2x^4 - 3x^4 + 4x^2 - 3$.}
+    \begin{tabularx}{\linewidth}{ r X }
+      \textbf{Function name} & \textbf{Description} \\
+      \hline & \\
+      \texttt{part\_i\_slowest} & Calculates polynomial using the \texttt{pow} function.\\
+      \\
+      \texttt{part\_i\_fast} & Calculates polynomial by replacing each exponent with the correspond series of multiplications (e.g. $x^6 \rightarrow x*x*x*x*x*x$)\\
+      \\
+      \texttt{part\_i\_fastest} & Calculates polynomial by: (1) caching the value of $x^2 = x*x$; (2) caching the value of $x^4 = x^2 * x^2$, and (3) calculating the polynomial as: $2*x^4*x^2 - 3*x^4 + 4*x^2 - 3$\\
+    \end{tabularx}
+  \end{table}
+
+    Theoretically, \texttt{T part\_i\_fast(const T)} and \texttt{T part\_i\_fastest(const T)} should be more computationally efficient than \texttt{T part\_i\_slowest(const T)} because the \texttt{pow} is a computationally expensive method to calculate $x^6$, $x^4$, and $x^2$.
+    In addition, if you count the multiplication and division operations, \texttt{T part\_i\_fast(const T)} requires 12 operations and \texttt{T part\_i\_fastest(const T)} only requires 6.
+    Therefore, of the three implementations \texttt{T part\_i\_fastest(const T)} should be the fastest.
+    
+    Each of the three functions were profiled to measure its computation time.
+    The results of (1) the return value of each function for each input number, and (2) the associated computation time are presented in the output (\Fref{sec:output1}).
+    For every case (i.e. each combination of number and return type), \texttt{part\_i\_slowest} had the most computing time; and in general, \texttt{part\_i\_fastest} required less computing time than \texttt{part\_i\_fast}.
+    Therefore, the results were consistent with what one would intuitively expect given that the \texttt{pow} function is computationally expensive, and \texttt{part\_i\_fastest} had the least amount of multiplication operations.
+  \item A function was written to determine whether or not an integer is prime, \texttt{bool is\_prime(const int x)}.
+    Its implementation is given in \Fref{sec:src1}.
+    The algorithm works by:
+    \begin{enumerate}
+      \item checking to see if $x < 1$.
+        If $x$ is zero or negative, it cannot be prime.
+      \item checking to see if $x = 1$ or $x = 2$.
+        If $x$ is 1 or 2 then it is prime.
+      \item checking to see if $x$ can be divided by 2 without remainder.
+        If $x$ can be divided by 2 without remainder, and is not 2 (as verified by the previous step), then $x$ is even.
+      \item checking each odd number less than $x$ to see if it divides $x$ without remainder.
+        Only the odd numbers need to be checked because the previously step accounted for all of the even numbers.
+        If an odd number is found to divide $x$ without remainder, then $x$ is not prime.
+        Otherwise, $x$ is prime.
+    \end{enumerate}
+    Although this algorithm is simple, it is theoretically twice as efficient as the brute force approach (checking every positive integer less than $x$ to see if it divides into $x$ without remainder).
+    \item There is a clear difference between the polynomial functions that have a return type of \texttt{int} and those that have a return type of \texttt{double}.
+     For the smallest numbers, 11 and 28, all of the functions agree.
+     However, for the numbers greater than 28 (45, 397, 677, 951, 2552, 6447) the functions with return type \texttt{int} experience numerical overflow (i.e. the computed value is greater than what can be stored).
+     This happens because an \texttt{int} is only 4 bytes (on my machine) and a double is 8 bytes.
+\end{enumerate}
+
+\pagebreak
+
+\subsection{Source: \texttt{start.cpp}} \label{sec:src1}
+
+{\centering \small
+\lstinputlisting{start.cpp}
+}
+
+\pagebreak
+
+\subsection{Output} \label{sec:output1}
+
+{\centering \small
+\VerbatimInput{5output.txt}
+}
+
+\section{Problem 2}
+
+\section{Problem 3}
+
+\section{Problem 4}
+
+\end{document}
