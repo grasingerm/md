@@ -1,0 +1,80 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{mathtools}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{fancyvrb}
+\usepackage{tabularx}
+\usepackage{fancyref}
+\usepackage{enumitem}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{amsmath}
+\usepackage[square,numbers,sort&compress]{natbib}
+
+\title{Molecular Simulation of Materials, Homework 2}
+\author{Matthew Grasinger}
+
+\begin{document}
+
+\lstset{language=C++,
+        basicstyle=\ttfamily,
+        keywordstyle=\color{blue}\ttfamily,
+        stringstyle=\color{red}\ttfamily,
+        commentstyle=\color{green}\ttfamily,
+        morecomment=[l][\color{magenta}]{\#},
+        breaklines=true,
+        postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\color{red}\hookrightarrow\space}}
+}
+
+\pagenumbering{gobble}
+\vspace{3.5in}
+\maketitle
+\clearpage
+\pagenumbering{arabic}
+
+\newcommand{\p}{\mathbf{p}}
+\newcommand{\pos}{\mathbf{r}}
+
+\section{Problem 1}
+
+\begin{enumerate}[label=\alph*)]
+  \item \begin{enumerate}[label=\roman*]
+      \item \begin{align*}
+          \frac{1}{2m_i} \frac{\partial |\p_i|^2}{\partial \p_i} = & \frac{1}{2m_i} \frac{\partial \left[\p_i \cdot \p_i\right]}{\partial \p_i}, \\
+          = & \frac{1}{2m_i} \frac{\partial \left[p_{i1}^2 + p_{i2}^2 + p_{i3}^2\right]}{\partial p_{ij}}, \\
+        = & \frac{1}{2m_i} \begin{Bmatrix}2p_{i1} \\ 2p_{i2} \\ 2p_{i3}\end{Bmatrix}, \\
+        = & \frac{2 \p_i}{2m_i}, \\
+        = & \frac{\p_i}{m_i}.
+        \end{align*}
+      \item \begin{align*}
+          \frac{\partial r_{ij}}{\partial \pos_i} = & \frac{\partial \sqrt{\left(r_{i1} - r_{j1}\right)^2 + \left(r_{i2} - r_{j2}\right)^2 + \left(r_{i3} - r_{j3}\right)^2}}{\partial \pos_i}, \\
+        = & \begin{Bmatrix} \frac{1}{2} \left[\left(r_{i1} - r_{j1}\right)^2 + \left(r_{i2} - r_{j2}\right)^2 + \left(r_{i3} - r_{j3}\right)^2\right]^{-1/2} 2\left(r_{i1} - r_{j1}\right) \\ \frac{1}{2} \left[\left(r_{i1} - r_{j1}\right)^2 + \left(r_{i2} - r_{j2}\right)^2 + \left(r_{i3} - r_{j3}\right)^2\right]^{-1/2} 2\left(r_{i2} - r_{j2}\right) \\ \frac{1}{2} \left[\left(r_{i1} - r_{j1}\right)^2 + \left(r_{i2} - r_{j2}\right)^2 + \left(r_{i3} - r_{j3}\right)^2\right]^{-1/2} 2\left(r_{i3} - r_{j3}\right) \end{Bmatrix}, \\
+          = & \frac{1}{2} r_{ij}^{-1} 2\pos_{ij}, \\
+          = & \frac{\pos_{ij}}{r_{ij}}.
+        \end{align*}
+      \item 
+        \begin{align*}
+          \mathcal{H} = & \mathcal{K} + \mathcal{U}, \\
+          = & \Sigma_i \frac{\left|\p_i\right|^2}{2 m_i} + \mathcal{U}. \\
+        \end{align*}
+        TODO: FINISH THIS PROOF
+    \end{enumerate}
+  \item \begin{align*}
+      v_{i,x}(t + \Delta t) & = v_{i,x}(t) + \frac{\partial v_{i,x}}{\partial t}\Bigr|_{t} (\Delta t) + \frac{1}{2} \frac{\partial^2 v_{i,x}}{\partial t^2}\Bigr|_{t} (\Delta t)^2, \\
+                            & = v_{i,x}(t) + \frac{F_{i,x}(t)}{m_i} (\Delta t) + \frac{1}{2} \frac{\partial^2 v_{i,x}}{\partial t^2}\Bigr|_{t} (\Delta t)^2.
+    \end{align*}
+    Recall that $v_{i,x}(t + \Delta t / 2) = v_{i,x}(t) + F_{i,x}(t) \Delta t/(2m_i)$.
+    \begin{equation} \label{eq:vi3}
+      v_{i,x}(t + \Delta t) = v_{i,x}(t + \Delta t / 2) + \frac{F_{i,x}(t)}{2m_i}(\Delta t) + \frac{1}{2} \frac{\partial^2 v_{i,x}}{\partial t^2}\Bigr|_{t} (\Delta t)^2.
+    \end{equation}
+    We can simplify \eqref{eq:vi3} further by considering the Taylor expansion of the force:
+    \begin{align}
+    F_{i,x}(t + \Delta t) & = F_{i,x}(t) + \frac{\partial F_{i,x}}{\partial t}\Bigr|_{t} (\Delta t), \\
+                          & = F_{i,x}(t) + \frac{\partial}{\partial t}\left[m_i \frac{\partial v_{i,x}}{\partial t}\right]\Bigr|_{t} (\Delta t), \\
+      \label{eq:Ftaylor} & = F_{i,x}(t) + m_i \frac{\partial^2 v_{i,x}}{\partial t^2}\Bigr|_{t}(\Delta t).
+    \end{align}
+    Dividing both sides of \eqref{eq:Ftaylor} by $2m_i$ and plugging into \eqref{eq:vi3} yields the desired result.
+\end{enumerate}
+
+\end{document}
