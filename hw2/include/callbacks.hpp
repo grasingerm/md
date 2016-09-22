@@ -1,5 +1,5 @@
-#ifndef __CALLBACKS__
-#define __CALLBACKS__
+#ifndef __CALLBACKS_HPP__
+#define __CALLBACKS_HPP__
 
 #include "molecule.hh"
 

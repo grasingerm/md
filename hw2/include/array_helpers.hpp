@@ -1,5 +1,5 @@
-#ifndef __ARRAY_HELPERS_HPP
-#define __ARRAY_HELPERS_HPP
+#ifndef __ARRAY_HELPERS_HPP__
+#define __ARRAY_HELPERS_HPP__
 
 #include<array>
 #include<iostream>

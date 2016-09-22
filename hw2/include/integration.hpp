@@ -1,5 +1,5 @@
-#ifndef __INTEGRATION__
-#define __INTEGRATION__
+#ifndef __INTEGRATION_HPP__
+#define __INTEGRATION_HPP__
 
 #include "molecule.hh"
 #include "potentials.hh"

@@ -1,5 +1,5 @@
-#ifndef __SIMULATION__
-#define __SIMULATION__
+#ifndef __SIMULATION_HPP__
+#define __SIMULATION_HPP__
 
 #include "potentials.hh"
 #include "callbacks.hh"
