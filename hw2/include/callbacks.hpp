@@ -1,12 +1,12 @@
 #ifndef __CALLBACKS_HPP__
 #define __CALLBACKS_HPP__
 
-#include "molecule.hh"
+#include <functional>
 
 namespace mmd {
 
 template <size_t D>
-using callback = function<void(const vector<molecule<D>>&, const double)>;
+using callback = std::function<void(const vector<molecule<D>>&, const double)>;
 
 callback save_pos_callback(const char*, const double);
 
