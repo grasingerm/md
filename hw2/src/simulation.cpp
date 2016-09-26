@@ -1,8 +1,13 @@
-#include "simulation.hh"
+#include "simulation.hpp"
 
 namespace mmd {
 
-void simulation<D>::simulate(const unsigned nsteps) {
+simulation::simulation(const molecular_id id, const char* fname, 
+                       const abstract_potential* pot, const double dt) {
+  // stuff
+}
+
+void simulation::simulate(const unsigned nsteps) {
   const n = molecules.size();
   double t = 0.0;
   vector<array<double, D>> forces(n, {0.0, 0.0});
@@ -50,4 +55,4 @@ void simulation<D>::simulate(const unsigned nsteps) {
   }
 }
 
-}
+} // namespace mmd

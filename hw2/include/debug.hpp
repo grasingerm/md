@@ -5,6 +5,8 @@
 #include <armadillo>
 #include "molecular.hpp"
 
+//#define MMD_DISABLE_RUNTIME_CHECKS 1
+
 namespace mmd {
 
 inline void _check_arg_sizes(const std::vector<molecular_id>& molecular_ids, 

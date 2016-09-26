@@ -5,8 +5,7 @@
 
 namespace mmd {
 
-template <size_t D>
-using callback = std::function<void(const vector<molecule<D>>&, const double)>;
+using callback = std::function<void(const simulation&)>;
 
 callback save_pos_callback(const char*, const double);
 

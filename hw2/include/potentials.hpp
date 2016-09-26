@@ -4,6 +4,7 @@
 #include <armadillo>
 #include <vector>
 #include <stdexcept>
+#include "debug.hpp"
 
 namespace mmd {
 
