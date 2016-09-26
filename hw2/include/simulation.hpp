@@ -3,8 +3,9 @@
 
 #include <vector>
 #include <armadillo>
-#include "potentials.hh"
-#include "callbacks.hh"
+#include "integration.hpp"
+#include "potentials.hpp"
+#include "callbacks.hpp"
 
 namespace mmd {
 
@@ -16,18 +17,22 @@ namespace mmd {
  */
 class simulation {
 
+private: static const time_integrator default_time_int = velocity_verlet;
+
 public:
 
   /*! \brief Simulation class with all molecules of the same type
    *
-   * \param   id    Id of all molecules in the simulation
-   * \param   fname Filename that contains positions of molecules
-   * \param   pot   Potential function that acts on molecules
-   * \param   dt    Time step size
+   * \param   id      Id of all molecules in the simulation
+   * \param   fname   Filename that contains positions of molecules
+   * \param   pot     Potential function that acts on molecules
+   * \param   dt      Time step size
+   * \param   vscale  Scale for random velocities that are generated 
    * \return        Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname, 
-             const abstract_potential* pot, const double dt);
+             const abstract_potential* pot, const double dt, 
+             const double vscale = 1.0);
 
   ~simulation() {}
 
