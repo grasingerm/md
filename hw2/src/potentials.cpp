@@ -89,4 +89,43 @@ void abstract_spring_potential::_increment_forces
 
 }
 
+const_poly_spring_potential(const initializer_list<double>& coeffs) 
+  : pcoeffs(coeffs) {
+  
+  for (size_t i = 1; i < pcoeffs.size(); ++i)
+    fcoeffs.push_back(pcoeffs[i]*i);
+
+}
+
+double const_poly_spring_potential::_potential_energy
+  (const std::vector<molecular_id>& molecular_ids, arma::mat& positions) const {
+  
+  const auto n = molecular_ids.size();
+  double potential = 0;
+  
+  for (auto i = size_t{0}; i < n; ++i) {
+
+    const double r2 = dot(positions.col(i), positions.col(i));
+    for (auto p = size_t{0}; p < pcoeffs.size(); ++p) {
+      double x = 1;
+      for (auto k = size_t{0}; k < p; ++k) x *= r2;
+      potential += pcoeffs[p] * x;
+    }
+
+  }
+
+  return potential;
+}
+
+void abstract_spring_potential::_increment_forces
+  (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions, 
+   arma::mat& forces) const {
+  
+  const auto n = molecular_ids.size();
+  
+  for (auto i = size_t{0}; i < n-1; ++i)
+    forces.col(i) -= get_k() * positions.col(i);
+
+}
+
 } // namespace mmd

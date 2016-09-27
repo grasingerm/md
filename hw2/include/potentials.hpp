@@ -3,6 +3,7 @@
 
 #include <armadillo>
 #include <vector>
+#include <initializer_list>
 #include <stdexcept>
 #include "debug.hpp"
 
@@ -157,7 +158,7 @@ private:
  * for all molecules, regardless of molecular id.
  * k should always be greater than 0.
  */
-class const_k_spring_potential : public abstract_potential {
+class const_k_spring_potential : public abstract_spring_potential {
 public:
   /*! \brief Constructor for potential with same spring constant for all molecules
    *
@@ -175,6 +176,34 @@ private:
   virtual double _get_k(molecular_id) const { return _k };
 
   double _k;
+};
+
+/*! \brief Potential due to a spring with a polynomial potential
+ *
+ * Potential due to a spring in which the potential, a x^n + b x^-1 + ..., 
+ * is the same for all molecules, regardless of molecular id.
+ */
+class const_poly_spring_potential : public abstract_potential {
+public:
+  /*! \brief Constructor for potential with same spring potential for all molecules
+   *
+   * Constructor for potential with same spring constant for all molecules.
+   *
+   * \param    coeffs   Polynomial coefficients
+   * \return            Spring potential
+   */
+  const_poly_spring_potential(const std::initializer_list<double>& coeffs); 
+
+  virtual ~const_poly_spring_potential() {}
+
+private:
+  virtual double _potential_energy(const std::vector<molecular_id>&, arma::mat&, 
+                                   arma::mat&) const;
+  virtual void _increment_forces(const std::vector<molecular_id>&, arma::mat&, 
+                                 arma::mat&) const;
+
+  std::vector<double> pcoeffs;
+  std::vector<double> fcoeffs;
 };
 
 } // namespace mmd
