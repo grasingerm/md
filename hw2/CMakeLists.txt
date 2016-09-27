@@ -15,11 +15,11 @@ include_directories(include)
 file(GLOB libsources "src/*.cpp" "include/*.cpp")
 
 add_library(mmd SHARED ${libsources})
-add_executable(prob2 prob/prob2.cpp)
+add_executable(prob2i prob/prob2i.cpp)
 
 if (UNIX)
     target_link_libraries(mmd m)
 endif (UNIX)
 
 target_link_libraries(mmd armadillo)
-target_link_libraries(prob2 armadillo mmd)
+target_link_libraries(prob2i armadillo mmd)

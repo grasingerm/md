@@ -90,7 +90,7 @@ public:
 
 private:
   virtual double _potential_energy(const std::vector<molecular_id>&, 
-                                   const arma::mat&, arma::mat&) const;
+                                   const arma::mat&) const;
   virtual void _increment_forces(const std::vector<molecular_id>&, 
                                  const arma::mat&, arma::mat&) const;
   virtual double _get_well_depth(const molecular_id, const molecular_id) const=0;
@@ -145,10 +145,10 @@ public:
   }
 
 private:
-  virtual double _potential_energy(const std::vector<molecular_id>&, arma::mat&, 
-                                   arma::mat&) const;
-  virtual void _increment_forces(const std::vector<molecular_id>&, arma::mat&, 
-                                 arma::mat&) const;
+  virtual double _potential_energy(const std::vector<molecular_id>&, 
+                                   const arma::mat&) const;
+  virtual void _increment_forces(const std::vector<molecular_id>&, 
+                                 const arma::mat&, arma::mat&) const;
   virtual double _get_k(molecular_id) const=0;
 };
 
@@ -197,13 +197,43 @@ public:
   virtual ~const_poly_spring_potential() {}
 
 private:
-  virtual double _potential_energy(const std::vector<molecular_id>&, arma::mat&, 
-                                   arma::mat&) const;
-  virtual void _increment_forces(const std::vector<molecular_id>&, arma::mat&, 
-                                 arma::mat&) const;
+  virtual double _potential_energy(const std::vector<molecular_id>&, 
+                                   const arma::mat&) const;
+  virtual void _increment_forces(const std::vector<molecular_id>&, 
+                                 const arma::mat&, arma::mat&) const;
 
   std::vector<double> pcoeffs;
   std::vector<double> fcoeffs;
+};
+
+/*! \brief Generic potential that is built by lambdas, functors, etc.
+ */
+class generic_potential : public abstract_potential {
+public:
+  /*! \brief Constructor for generic potential
+   *
+   * \param    potential_f   Potential function
+   * \return   force_f       Force function
+   */
+  generic_potential(std::function <double(const std::vector<molecular_id>&, 
+        const arma::mat&)> potential_f, std::function <void(const 
+        std::vector<molecular_id>&, const arma::mat&, arma::mat&)> force_f)
+    : potential_f(potential_f), force_f(force_f) {}
+
+  ~generic_potential() {}
+
+private:
+  inline double _potential_energy
+    (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions) 
+    const { return potential_f(molecular_ids, positions); }
+  inline void _increment_forces
+    (const std::vector<molecular_id>&, molecular_ids, const arma::mat& positions, 
+     arma::mat& forces) const { force_f(molecular_ids, positions, forces); }
+
+  std::function <double(const std::vector<molecular_id>&, const arma::mat&)> 
+    potential_f;
+  std::function <void(const std::vector<molecular_id>&, const arma::mat&, 
+                      arma::mat&)> force_f;
 };
 
 } // namespace mmd

@@ -5,7 +5,8 @@ namespace mmd {
 using namespace arma;
 
 double abstract_LJ_potential::_potential_energy
-  (const std::vector<molecular_id>& molecular_ids, arma::mat& positions) const {
+  (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions) 
+  const {
   
   const auto n = molecular_ids.size();
   double potential = 0;
@@ -84,7 +85,7 @@ void abstract_spring_potential::_increment_forces
   
   const auto n = molecular_ids.size();
   
-  for (auto i = size_t{0}; i < n-1; ++i)
+  for (auto i = size_t{0}; i < n; ++i)
     forces.col(i) -= get_k() * positions.col(i);
 
 }
@@ -123,8 +124,15 @@ void abstract_spring_potential::_increment_forces
   
   const auto n = molecular_ids.size();
   
-  for (auto i = size_t{0}; i < n-1; ++i)
-    forces.col(i) -= get_k() * positions.col(i);
+  for (auto i = size_t{0}; i < n; ++i) {
+    const double r2 = dot(positions.col(i), positions.col(i));
+    for (auto p = size_t{0}; p < pcoeffs.size(); ++p) {
+      double x = 1;
+      for (auto k = size_t{0}; k < p; ++k) x *= r2;
+      forces.col(i) += fcoeffs[p] * x * positions.col(i);
+    }
+
+  }
 
 }
 

@@ -6,6 +6,7 @@
 #include "integration.hpp"
 #include "potentials.hpp"
 #include "callbacks.hpp"
+#include "molecular.hpp"
 
 namespace mmd {
 
@@ -27,12 +28,37 @@ public:
    * \param   fname   Filename that contains positions of molecules
    * \param   pot     Potential function that acts on molecules
    * \param   dt      Time step size
+   * \return        Molecular simulation object
+   */
+  simulation(const molecular_id id, const char* fname, 
+             const abstract_potential* pot, const double dt);
+
+  /*! \brief Simulation class with all molecules of the same type
+   *
+   * \param   id      Id of all molecules in the simulation
+   * \param   fname   Filename that contains positions of molecules
+   * \param   pot     Potential function that acts on molecules
+   * \param   dt      Time step size
    * \param   vscale  Scale for random velocities that are generated 
    * \return        Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname, 
              const abstract_potential* pot, const double dt, 
-             const double vscale = 1.0);
+             const double vscale);
+
+  /*! \brief Simulation class with all molecules of the same type
+   *
+   * \param   id          Id of all molecules in the simulation
+   * \param   fname_pos   Filename that contains positions of molecules
+   * \param   fname_vel   Filename that contains positions of molecules
+   * \param   pot         Potential function that acts on molecules
+   * \param   dt          Time step size
+   * \param   vscale      Scale for random velocities that are generated 
+   * \return        Molecular simulation object
+   */
+  simulation(const molecular_id id, const char* fname_pos, 
+             const char* fname_vel, const abstract_potential* pot, 
+             const double dt);
 
   ~simulation() {}
 
