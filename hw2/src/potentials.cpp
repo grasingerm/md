@@ -22,7 +22,7 @@ double abstract_LJ_potential::_potential_energy
       const double rat2 = (rzero * rzero) / rij2;
       const double rat6 = rat2 * rat2 * rat2;
       
-      potential += 4 * get_well_depth(molecular_ids[i], molecular_ids[j]) *
+      potential += 4.0 * get_well_depth(molecular_ids[i], molecular_ids[j]) *
                    (rat6*rat6 - rat6);
 
     }
@@ -52,7 +52,6 @@ void abstract_LJ_potential::_increment_forces
       const double well_depth = get_well_depth(molecular_ids[i], 
                                                molecular_ids[j]);
      
-      throw "check this implementation";
       const auto fij = positions.col(i) * well_depth * 
                        (48 * rat8*rat6 - 24 * rat8);
       forces.col(i) += fij;

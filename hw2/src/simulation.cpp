@@ -12,8 +12,9 @@ using namespace arma;
 
 simulation::simulation(const molecular_id id, const char* fname, 
                        const abstract_potential* pot, const double dt,
-                       const double vscale = 1.0) 
-  : potentials(pot, 1), time_int(simulation::default_time_int), dt(dt) {
+                       const double vscale) 
+  : ma([](molecular_id) { return 1.0; }), potentials(pot, 1), 
+    time_int(simulation::default_time_int), dt(dt), t(0.0) {
 
   string line;
   ifstream infile(fname, ifstream::in);
@@ -64,51 +65,46 @@ simulation::simulation(const molecular_id id, const char* fname,
 }
 
 void simulation::simulate(const unsigned nsteps) {
-  const n = molecules.size();
-  double t = 0.0;
-  vector<array<double, D>> forces(n, {0.0, 0.0});
-
   for (unsigned k = 0; k < nsteps; ++k) {
 
-    for (auto& force : forces) {
-      force[0] = 0.0;
-      force[1] = 0.0;
-    }
+    // Integrate in time
+    time_int(potentials, molecular_ids, positions, velocities, forces, dt, ma);
 
-    // Add single particle potentials to instantaneous forces
-    for (const auto ∇φ1 : ∇φ1s) {
-      for (unsigned i = 0; i < n; ++i) {
-        forces[i] += ∇φ1(molecules[i].q);
-      }
-    }
+    // Update clock 
+    t += dt;
 
-    // Add pairwise particle potentials to instantaneous forces
-    for (const auto ∇φ2 : ∇φ2s) {
-      for (unsigned i = 0; i < n-1; ++i) {
-        for (unsigned j = i; j < n; ++j) {
-          const unordered_pair<molecular_id> key { molecules[i].id, 
-                                                   molecules[j].id };
-          const auto& params = interactions[key];
-          const auto ∇φij = ∇φ2(params[0], params[1], 
-                                molecules[i].q - molecules[j].q);
-          forces[i] += ∇φij;
-          forces[j] -= ∇φij;
-        }
-      }
-    }
-
-    // Calculate instantaneous acceleration and integrate
-    for (unsigned i = 0; i < n; ++i) {
-      const mass = masses[molecules[i].id];
-      const array<double, D> a { forces[i][0] / mass, forces[i][1] / mass };
-      time_int(molecules[i], a, Δt); 
-    }
-
-    t += Δt;
-
-    for (const auto callback : callbacks) callback(molecules, t);
-
+    // Call all of the callback functions
+    for (auto& cb : callbacks) cb(*this);
+    
   }
+}
+
+double kinetic_energy(const simulation& sim) {
+  
+  const auto& molecular_ids = sim.get_molecular_ids();
+  const auto& ma = sim.get_mass_accessor();
+  const auto& velocities = sim.get_velocities();
+
+  double sum = 0.0;
+  for (size_t i = 0; i < molecular_ids.size(); ++i)
+    sum += ma(molecular_ids[i]) * dot(velocities.col(i), velocities.col(i));
+
+  return 0.5 * sum;
+
+}
+
+arma::vec momentum(const simulation& sim) {
+  
+  const auto& molecular_ids = sim.get_molecular_ids();
+  const auto& ma = sim.get_mass_accessor();
+  const auto& velocities = sim.get_velocities();
+
+  auto sum = arma::zeros<vec>(3);
+  for (size_t i = 0; i < molecular_ids.size(); ++i)
+    sum += ma(molecular_ids[i]) * velocities.col(i);
+
+  return sum;
+
 }
 
 } // namespace mmd

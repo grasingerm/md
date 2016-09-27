@@ -4,14 +4,16 @@
 #include <vector>
 #include <functional>
 #include <armadillo>
+#include "molecular.hpp"
 #include "potentials.hpp"
 
 namespace mmd {
 
+using mass_accessor = std::function<double(molecular_id)>;
 using time_integrator = 
   std::function<void(std::vector<abstract_potential*>&, 
                      std::vector<molecular_id>&, arma::mat&, arma::mat&,
-                     arma::mat&, const double)>;
+                     arma::mat&, const double, const mass_accessor&)>;
 
 /*! \brief Time integration using Euler integration
  *
@@ -29,11 +31,12 @@ using time_integrator =
  * \param   velocities    Matrix of molecular velocities
  * \param   forces        Matrix of molecular forces
  * \param   dt            Time step size
+ * \param   ma            Function for looking up molecular mass
  */
 void euler(std::vector<abstract_potential*>& potentials, 
            std::vector<molecular_id>& molecular_ids, 
            arma::mat& positions, arma::mat& velocities, 
-           arma::mat& forces, const double dt);
+           arma::mat& forces, const double dt, const mass_accessor& ma);
 
 /*! \brief Time integration using Velocity Verlet algorithm
  *
@@ -51,11 +54,13 @@ void euler(std::vector<abstract_potential*>& potentials,
  * \param   velocities    Matrix of molecular velocities
  * \param   forces        Matrix of molecular forces
  * \param   dt            Time step size
+ * \param   ma            Function for looking up molecular mass
  */
 void velocity_verlet(std::vector<abstract_potential*>& potentials, 
                      std::vector<molecular_id>& molecular_ids, 
                      arma::mat& positions, arma::mat& velocities, 
-                     arma::mat& forces, const double dt);
+                     arma::mat& forces, const double dt,
+                     const mass_accessor& ma);
 
 } // namespace mmd
 
