@@ -42,8 +42,6 @@ simulation::simulation(const molecular_id id, const char* fname,
   while ((infile >> x >> y >> z) && i < n) {
     molecular_ids.push_back(id);
 
-    cout << "reading in values: " << x << ", " << y << ", " << z << '\n';
-
     positions(0, i) = x;
     positions(1, i) = y;
     positions(2, i) = z;

@@ -50,6 +50,7 @@ void print_values_with_time_callback::operator()(const simulation& sim) {
   }
 }
 
+// TODO: maybe initialize energy from t = 0, pass simulation object as arg?
 callback check_energy(const double dt, const double eps) {
 
   _check_dt(dt);
@@ -78,6 +79,7 @@ callback check_energy(const double dt, const double eps) {
 
 }
 
+// TODO: maybe initialize momentum from t = 0, pass simulation object as arg?
 callback check_momentum(const double dt, const double eps) {
  
   _check_dt(dt);
