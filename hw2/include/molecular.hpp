@@ -6,7 +6,7 @@
 
 namespace mmd {
 
-enum class molecular_id { Ar, Cu, Test, Test1, Test2 }
+enum class molecular_id { Ar, Cu, Test, Test1, Test2 };
 using molecular_name_map = std::unordered_map<std::string, molecular_id>;
 using molecular_pair_interaction_map = 
   std::unordered_map< unordered_pair<molecular_id>, double>;

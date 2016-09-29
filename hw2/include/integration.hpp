@@ -4,16 +4,10 @@
 #include <vector>
 #include <functional>
 #include <armadillo>
-#include "molecular.hpp"
+#include "mmd_types.hpp"
 #include "potentials.hpp"
 
 namespace mmd {
-
-using mass_accessor = std::function<double(molecular_id)>;
-using time_integrator = 
-  std::function<void(std::vector<abstract_potential*>&, 
-                     std::vector<molecular_id>&, arma::mat&, arma::mat&,
-                     arma::mat&, const double, const mass_accessor&)>;
 
 /*! \brief Time integration using Euler integration
  *

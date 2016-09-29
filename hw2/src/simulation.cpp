@@ -10,18 +10,21 @@ namespace mmd {
 using namespace std;
 using namespace arma;
 
+// default time integration scheme
+const time_integrator simulation::default_time_int = velocity_verlet;
+
 simulation::simulation(const molecular_id id, const char* fname, 
-                       const abstract_potential* pot, const double dt)
-  : ma([](molecular_id) { return 1.0; }), potentials(pot, 1), 
+                       abstract_potential* pot, const double dt)
+  : ma([](molecular_id) -> double { return 1.0; }), potentials(size_t{1}, pot), 
     time_int(simulation::default_time_int), dt(dt), t(0.0) {
 
   string line;
   ifstream infile(fname, ifstream::in);
   
-  if (!infile.is_open) 
+  if (!infile.is_open()) 
     throw invalid_argument(string("Could not open data file: ") + string(fname));
 
-  int n;
+  size_t n;
   infile >> n;
 
   // allocate memory for molecular degrees of freedom
@@ -29,6 +32,7 @@ simulation::simulation(const molecular_id id, const char* fname,
   velocities.zeros(3, n); 
   forces.zeros(3, n); 
 
+  getline(infile, line); // read-in newline
   getline(infile, line); // comment line
 
   size_t i = 0;
@@ -38,9 +42,11 @@ simulation::simulation(const molecular_id id, const char* fname,
   while ((infile >> x >> y >> z) && i < n) {
     molecular_ids.push_back(id);
 
-    positions(i, 0) = x;
-    positions(i, 1) = y;
-    positions(i, 2) = z;
+    cout << "reading in values: " << x << ", " << y << ", " << z << '\n';
+
+    positions(0, i) = x;
+    positions(1, i) = y;
+    positions(2, i) = z;
 
     ++i;
   }
@@ -50,50 +56,55 @@ simulation::simulation(const molecular_id id, const char* fname,
 }
 
 simulation::simulation(const molecular_id id, const char* fname, 
-                       const abstract_potential* pot, const double dt,
-                       const double vscale) 
-  : simulation(molecular_id, fname, pot, dt) {
+                       abstract_potential* pot, const double dt, 
+                       const double vscale) : simulation(id, fname, pot, dt) {
 
   default_random_engine generator;
   normal_distribution<double> dist(0.0, vscale);
 
   for (size_t i = 0; i < velocities.n_cols; ++i) {
-    velocities(i, 0) = dist(generator);
-    velocities(i, 1) = dist(generator);
-    velocities(i, 2) = dist(generator);
+    velocities(0, i) = dist(generator);
+    velocities(1, i) = dist(generator);
+    velocities(2, i) = dist(generator);
   }
+
+  const auto n = molecular_ids.size();
 
   // ensure initial momentum is zero
   // Note:: m is constant for this constructor so we only need to consider
   //        velocities
-  for (unsigned j = 0; j < 3; ++j) {
+  for (unsigned i = 0; i < 3; ++i) {
     double vsum = 0.0;
-    for (size_t i = 0; i < n; ++i) vsum += velocities(i, j);
-    for (size_t i = 0; i < n; ++i) velocities(i, j) -= vsum / n;
+    for (size_t j = 0; j < n; ++j) vsum += velocities(i, j);
+    for (size_t j = 0; j < n; ++j) velocities(i, j) -= vsum / n;
   }
 
-  assert(abs(sum(velocities)) < 1.0e-9);
+  // check momentum
+#ifndef NDEBUG
+  for (unsigned i = 0; i < 3; ++i) {
+    double sum = 0.0;
+    for (size_t j = 0; j < n; ++j) sum += velocities(i, j);
+    assert(abs(sum) < 1.0e-9);
+  }
+#endif
 }
 
 simulation::simulation(const molecular_id id, const char* fname_pos,
-                       const char* fname_vel, const abstract_potential* pot, 
+                       const char* fname_vel, abstract_potential* pot, 
                        const double dt) 
-  : simulation(molecular_id, fname_pos, pot, dt) {
+  : simulation(id, fname_pos, pot, dt) {
 
   string line;
   ifstream infile(fname_vel, ifstream::in);
   
-  if (!infile.is_open) 
-    throw invalid_argument(string("Could not open data file: ") + string(fname));
+  if (!infile.is_open()) 
+    throw invalid_argument(string("Could not open data file: ") 
+                           + string(fname_vel));
 
-  int n;
+  size_t n;
   infile >> n;
 
-  // allocate memory for molecular degrees of freedom
-  positions.resize(3, n); 
-  velocities.zeros(3, n); 
-  forces.zeros(3, n); 
-
+  getline(infile, line); // read in newline
   getline(infile, line); // comment line
 
   size_t i = 0;
@@ -102,9 +113,9 @@ simulation::simulation(const molecular_id id, const char* fname_pos,
   // read positions from file and initialize random velocities
   while ((infile >> u >> v >> w) && i < n) {
 
-    velocities(i, 0) = u;
-    velocities(i, 1) = v;
-    velocities(i, 2) = w;
+    velocities(0, i) = u;
+    velocities(1, i) = v;
+    velocities(2, i) = w;
 
     ++i;
 
@@ -113,7 +124,7 @@ simulation::simulation(const molecular_id id, const char* fname_pos,
   infile.close();
 }
 
-void simulation::simulate(const unsigned nsteps) {
+void simulation::simulate(const unsigned long long nsteps) {
   for (unsigned k = 0; k < nsteps; ++k) {
 
     // Integrate in time
@@ -148,11 +159,11 @@ arma::vec momentum(const simulation& sim) {
   const auto& ma = sim.get_mass_accessor();
   const auto& velocities = sim.get_velocities();
 
-  auto sum = arma::zeros<vec>(3);
-  for (size_t i = 0; i < molecular_ids.size(); ++i)
-    sum += ma(molecular_ids[i]) * velocities.col(i);
+  arma::vec vsum(3); vsum.zeros();
+  for (size_t i = 0; i < molecular_ids.size(); ++i) 
+    vsum += (ma(molecular_ids[i]) * velocities.col(i));
 
-  return sum;
+  return vsum;
 
 }
 

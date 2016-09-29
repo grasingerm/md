@@ -1,8 +1,8 @@
 #ifndef __ARRAY_HELPERS_HPP__
 #define __ARRAY_HELPERS_HPP__
 
-#include<array>
-#include<iostream>
+#include <array>
+#include <iostream>
 
 namespace {
 

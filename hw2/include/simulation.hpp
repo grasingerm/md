@@ -5,8 +5,7 @@
 #include <armadillo>
 #include "integration.hpp"
 #include "potentials.hpp"
-#include "callbacks.hpp"
-#include "molecular.hpp"
+#include "mmd_types.hpp"
 
 namespace mmd {
 
@@ -18,7 +17,7 @@ namespace mmd {
  */
 class simulation {
 
-private: static const time_integrator default_time_int = velocity_verlet;
+private: static const time_integrator default_time_int;
 
 public:
 
@@ -31,7 +30,7 @@ public:
    * \return        Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname, 
-             const abstract_potential* pot, const double dt);
+             abstract_potential* pot, const double dt);
 
   /*! \brief Simulation class with all molecules of the same type
    *
@@ -43,8 +42,7 @@ public:
    * \return        Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname, 
-             const abstract_potential* pot, const double dt, 
-             const double vscale);
+             abstract_potential* pot, const double dt, const double vscale);
 
   /*! \brief Simulation class with all molecules of the same type
    *
@@ -57,8 +55,7 @@ public:
    * \return        Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname_pos, 
-             const char* fname_vel, const abstract_potential* pot, 
-             const double dt);
+             const char* fname_vel, abstract_potential* pot, const double dt);
 
   ~simulation() {}
 
@@ -66,7 +63,7 @@ public:
    *
    * \param   nsteps  Number of time steps to simulate
    */
-  simulate(const unsigned nsteps);
+  void simulate(const unsigned long long nsteps);
 
   /*! \brief Add a callback function
    *
@@ -108,6 +105,14 @@ public:
    */
   inline const arma::mat& get_forces() const { return forces; }
   
+  /*! \brief Get the current intermolecular forces
+   *
+   * \return  Current intermolecular forces
+   */
+  inline const std::vector<abstract_potential*>& get_potentials() const { 
+    return potentials; 
+  }
+
   /*! \brief Get the current time
    *
    * \return  Current time
@@ -122,7 +127,7 @@ public:
 
 private:
 
-  std::vector<molecular_ids> molecular_ids;
+  std::vector<molecular_id> molecular_ids;
   mass_accessor ma;
   arma::mat positions;
   arma::mat velocities;
@@ -141,8 +146,9 @@ private:
  */
 inline double potential_energy(const simulation& sim) {
   double sum = 0.0;
-  for (const auto& potential : potentials)
-    sum += potential(sim.get_molecular_ids(), sim.get_positions());
+  for (const auto& potential : sim.get_potentials())
+    sum += potential->potential_energy(sim.get_molecular_ids(), 
+                                       sim.get_positions());
   return sum;
 }
 
@@ -159,7 +165,7 @@ double kinetic_energy(const simulation& sim);
  * \return        Energy
  */
 inline double total_energy(const simulation& sim) {
-  return potential_energy(sim) + total_energy(sim);
+  return potential_energy(sim) + kinetic_energy(sim);
 }
 
 /*! \brief Calculate the total momentum for a simulation

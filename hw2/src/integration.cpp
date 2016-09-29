@@ -10,7 +10,7 @@ void euler(std::vector<abstract_potential*>& potentials,
            mat& positions, mat& velocities, mat& forces, const double dt,
            const mass_accessor& ma) {
  
-  _check_arg_sizes(molecular_ids, mat& positions, mat& velocities, mat& forces);
+  _check_arg_sizes(molecular_ids, positions, velocities, forces);
 
   forces.zeros();
   for (const auto& potential : potentials)
@@ -28,7 +28,7 @@ void velocity_verlet(std::vector<abstract_potential*>& potentials,
                      mat& positions, mat& velocities, mat& forces, 
                      const double dt, const mass_accessor& ma) {
   
-  _check_arg_sizes(molecular_ids, mat& positions, mat& velocities, mat& forces);
+  _check_arg_sizes(molecular_ids, positions, velocities, forces);
 
   // calculate F(t)
   forces.zeros();

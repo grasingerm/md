@@ -2,5 +2,6 @@
 #define __MMD_HPP__
 
 #include "simulation.hpp"
+#include "callbacks.hpp"
 
 #endif

@@ -7,7 +7,7 @@ template <class T> struct unordered_pair {
 };
 
 template <class T> bool operator==(const unordered_pair<T>& up1,
-                                   const unordered_pari<T>& up2) {
+                                   const unordered_pair<T>& up2) {
   if (up1.first == up2.first) {
     if (up1.second == up2.second) return true;
   }

@@ -74,7 +74,7 @@ public:
    */
   inline double get_well_depth(const molecular_id id1, const molecular_id id2) 
     const { 
-    _get_well_depth(id1, id2); 
+    return _get_well_depth(id1, id2); 
   }
   
   /*! \brief Get the distance at which the potential is zero (sigma)
@@ -85,7 +85,7 @@ public:
    */
   inline double get_rzero (const molecular_id id1, const molecular_id id2) 
     const { 
-    _get_rzero(id1, id2); 
+    return _get_rzero(id1, id2); 
   }
 
 private:
@@ -141,7 +141,7 @@ public:
    * \return         Spring constant
    */
   inline double get_k(molecular_id id) const { 
-    _get_k(id); 
+    return _get_k(id); 
   }
 
 private:
@@ -173,7 +173,7 @@ public:
   virtual ~const_k_spring_potential() {}
 
 private:
-  virtual double _get_k(molecular_id) const { return _k };
+  virtual double _get_k(molecular_id) const { return _k; }
 
   double _k;
 };
@@ -227,7 +227,7 @@ private:
     (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions) 
     const { return potential_f(molecular_ids, positions); }
   inline void _increment_forces
-    (const std::vector<molecular_id>&, molecular_ids, const arma::mat& positions, 
+    (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions, 
      arma::mat& forces) const { force_f(molecular_ids, positions, forces); }
 
   std::function <double(const std::vector<molecular_id>&, const arma::mat&)> 
