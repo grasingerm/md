@@ -10,6 +10,7 @@
 #include <armadillo>
 #include <stdexcept>
 #include "simulation.hpp"
+#include "mprof.hpp"
 
 namespace mmd {
 
@@ -60,7 +61,17 @@ public:
    */
   save_xyz_callback(const char* fname, const double dt, data_accessor da) 
     : fname(fname), outfile(fname), dt(dt), da(da) {}
- 
+
+  /*! \brief Constructor for callback function that saves data in xyz format
+   *
+   * \param   fname   File name of the output file
+   * \param   dt      Frequency with which to write data
+   * \param   da      Function for accessing simulation data
+   * \return          Callback function
+   */
+  save_xyz_callback(const std::string& fname, const double dt, data_accessor da) 
+    : fname(fname), outfile(fname), dt(dt), da(da) {}
+
   /*! \brief Copy constructor for callback function that saves data in xyz format
    *
    * \param   cb      Callback function
@@ -106,6 +117,22 @@ public:
                                   "must be positive");
   }
 
+  /*! \brief Constructor for callback function that saves delimited data
+   *
+   * \param   fname   File name of the output file
+   * \param   dt      Frequency with which to write data
+   * \param   vas     Functions for accessing simulation values
+   * \param   delim   Character delimiter
+   * \return          Callback function
+   */
+  save_values_with_time_callback(const std::string& fname, const double dt,
+      const std::initializer_list<value_accessor>& vas, const char delim=',') 
+    : fname(fname), outfile(fname), dt(dt), vas(vas), delim(delim) {
+    if (dt < 0) 
+      throw std::invalid_argument("Time between callbacks, dt, "
+                                  "must be positive");
+  }
+
   /*! \brief Copy constructor
    *
    * \param   cb      Callback function to copy
@@ -142,6 +169,29 @@ private:
  */
 inline save_values_with_time_callback save_energy_and_momentum_with_time_callback
   (const char* fname, const double dt, const char delim=',') {
+
+  return save_values_with_time_callback(fname, dt, 
+          {
+            potential_energy, 
+            kinetic_energy, 
+            total_energy, 
+            [](const simulation& sim) -> double { 
+              return arma::norm(momentum(sim), 2); 
+            }
+          },
+          delim);
+
+}
+
+/*! Factory for constructing an energy and momentum saving callback
+ *
+ * \param   fname   File name of the output file
+ * \param   dt      Frequency with which to write data
+ * \param   delim   Character delimiter
+ * \return          Callback function
+ */
+inline save_values_with_time_callback save_energy_and_momentum_with_time_callback
+  (const std::string& fname, const double dt, const char delim=',') {
 
   return save_values_with_time_callback(fname, dt, 
           {
@@ -248,6 +298,13 @@ callback check_energy(const double dt, const double eps=1e-6);
  * \return      Callback
  */
 callback check_momentum(const double dt, const double eps=1e-6);
+
+/*! \brief Print time required to simulate dt time
+ *
+ * \param   dt  Frequency with which to print profiling information
+ * \return      Callback
+ */
+callback print_profile(const double dt);
 
 } // namespace mmd
 

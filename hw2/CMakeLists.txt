@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.8)
 
 project(md-hw2)
 
@@ -15,6 +15,9 @@ file(GLOB libsources "src/*.cpp" "include/*.cpp")
 
 add_library(mmd SHARED ${libsources})
 add_executable(prob2i prob/prob2i.cpp)
+add_executable(prob2ii prob/prob2ii.cpp)
+add_executable(prob3 prob/prob3.cpp)
+add_executable(bonus prob/bonus.cpp)
 
 if (UNIX)
     target_link_libraries(mmd m)
@@ -22,3 +25,6 @@ endif (UNIX)
 
 target_link_libraries(mmd armadillo)
 target_link_libraries(prob2i armadillo mmd)
+target_link_libraries(prob2ii armadillo mmd)
+target_link_libraries(prob3 armadillo mmd)
+target_link_libraries(bonus armadillo mmd)

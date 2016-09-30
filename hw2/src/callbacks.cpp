@@ -60,20 +60,20 @@ callback check_energy(const double dt, const double eps) {
   bool init_call = true;
   
   return [=](const simulation& sim) mutable {
-    if (_time_to_exec(sim, dt)) {
-      if (init_call) {
-        init_energy = total_energy(sim);
-        divisor = (init_energy != 0.0) ? init_energy : 1.0;
-        init_call = false;
+    if (init_call) {
+      init_energy = total_energy(sim);
+      divisor = (init_energy != 0.0) ? init_energy : 1.0;
+      init_call = false;
+    }
+    else if (_time_to_exec(sim, dt)) {
+      
+      if (abs((init_energy - total_energy(sim)) / divisor) > eps) {
+        cerr << "Energy is diverging outside the tolerance limit\n";
+        cerr << "Initial energy: " << init_energy << ", current energy: "
+             << total_energy(sim) << ", tolerance: " << eps << '\n';
+        throw runtime_error("Energy is not being conserved");
       }
-      else {
-        if (abs((init_energy - total_energy(sim)) / divisor) > eps) {
-          cerr << "Energy is diverging outside the tolerance limit\n";
-          cerr << "Initial energy: " << init_energy << ", current energy: "
-               << total_energy(sim) << ", tolerance: " << eps << '\n';
-          throw runtime_error("Energy is not being conserved");
-        }
-      }
+
     }
   };
 
@@ -89,20 +89,41 @@ callback check_momentum(const double dt, const double eps) {
   bool init_call = true;
   
   return [=](const simulation& sim) mutable {
-    if (_time_to_exec(sim, dt)) {
-      if (init_call) {
-        init_momentum = momentum(sim);
-        divisor = (norm(init_momentum) != 0.0) ? norm(init_momentum) : 1.0;
-        init_call = false;
+    if (init_call) {
+      init_momentum = momentum(sim);
+      divisor = (norm(init_momentum) > eps) ? norm(init_momentum) : 1.0;
+      init_call = false;
+    }
+    else if (_time_to_exec(sim, dt)) {
+      
+      if (norm(init_momentum - momentum(sim)) / divisor > eps) {
+        cerr << "System momentum is diverging outside the tolerance limit\n";
+        cerr << "Initial momentum:\n" << init_momentum << ", current momentum:\n"
+             << momentum(sim) << ", tolerance: " << eps << '\n';
+        throw runtime_error("Momentum is not being conserved");
       }
-      else {
-        if (norm(init_momentum - momentum(sim)) / divisor > eps) {
-          cerr << "System momentum is diverging outside the tolerance limit\n";
-          cerr << "Initial momentum:\n" << init_momentum << ", current momentum:\n"
-               << momentum(sim) << ", tolerance: " << eps << '\n';
-          throw runtime_error("Momentum is not being conserved");
-        }
-      }
+    }
+  };
+
+}
+
+callback print_profile(const double dt) {
+ 
+  _check_dt(dt);
+
+  bool init_call = true;
+  
+  return [=](const simulation& sim) mutable {
+    if (init_call) {
+      mprof::tic();
+      init_call = false;
+    }
+    else if (_time_to_exec(sim, dt)) {
+     
+      std::cout << "Time simulated: ";
+      mprof::toc();
+      mprof::tic();
+
     }
   };
 

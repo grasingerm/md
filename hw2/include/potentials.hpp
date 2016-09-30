@@ -103,7 +103,7 @@ private:
  * function between every pair of molecules is the same (i.e. to be used in
  * a simulation where all of the molecules are of the same type).
  */
-class const_well_params_LJ_potential : public abstract_potential {
+class const_well_params_LJ_potential : public abstract_LJ_potential {
 public:
   /*! \brief Constructor for a LJ potential with constant well parameters
    *
@@ -176,6 +176,36 @@ private:
   virtual double _get_k(molecular_id) const { return _k; }
 
   double _k;
+};
+
+/*! \brief Potential due to a quadratic spring with constant parameters
+ *
+ * Potential due to a spring in which the spring parameters are the same
+ * for all molecules, regardless of molecular id.
+ */
+class const_quad_spring_potential : public abstract_potential {
+public:
+  /*! \brief Constructor for potential with same spring parameters for all molecules
+   *
+   * Constructor for potential with same spring constant for all molecules.
+   *
+   * \param    k     Spring constant
+   * \return         Spring potential
+   */
+  const_quad_spring_potential(const double a, const double b, const double c) 
+    : a(a), b(b), c(c) {}
+
+  virtual ~const_quad_spring_potential() {}
+
+private:
+  virtual double _potential_energy(const std::vector<molecular_id>&, 
+                                   const arma::mat&) const;
+  virtual void _increment_forces(const std::vector<molecular_id>&, 
+                                 const arma::mat&, arma::mat&) const;
+
+  double a;
+  double b;
+  double c;
 };
 
 /*! \brief Potential due to a spring with a polynomial potential

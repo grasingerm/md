@@ -20,7 +20,7 @@ double abstract_LJ_potential::_potential_energy
         double rijk = ri[k] - rj[k];
         rij2 += rijk * rijk;
       }
-
+      
       const double rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
       const double rat2 = (rzero * rzero) / rij2;
       const double rat6 = rat2 * rat2 * rat2;
@@ -40,7 +40,7 @@ void abstract_LJ_potential::_increment_forces
   
   const auto n = molecular_ids.size();
   
-  for (auto i = size_t{0}; i < n-1; ++i) {
+  for (auto i = size_t{0}; i < n; ++i) {
     for (auto j = i+1; j < n; ++j) {
 
       const double *ri = positions.colptr(i), *rj = positions.colptr(j);
@@ -57,8 +57,8 @@ void abstract_LJ_potential::_increment_forces
       const double well_depth = get_well_depth(molecular_ids[i], 
                                                molecular_ids[j]);
      
-      const auto fij = positions.col(i) * well_depth * 
-                       (48 * rat8*rat6 - 24 * rat8);
+      const auto fij = (positions.col(i) - positions.col(j)) * well_depth * 
+                       (48.0 * rat8*rat6 - 24.0 * rat8);
       forces.col(i) += fij;
       forces.col(j) -= fij; // fji = -fij
 
@@ -98,7 +98,7 @@ const_poly_spring_potential::const_poly_spring_potential
   (const std::initializer_list<double>& coeffs) : pcoeffs(coeffs) {
   
   for (size_t i = 1; i < pcoeffs.size(); ++i)
-    fcoeffs.push_back(pcoeffs[i]*i);
+    fcoeffs.push_back(pcoeffs[i]*2*i);
 
 }
 
@@ -134,8 +134,40 @@ void const_poly_spring_potential::_increment_forces
     for (auto p = size_t{0}; p < pcoeffs.size(); ++p) {
       double x = 1;
       for (auto k = size_t{0}; k < p; ++k) x *= r2;
-      forces.col(i) += fcoeffs[p] * x * positions.col(i);
+      forces.col(i) -= fcoeffs[p] * x * positions.col(i);
     }
+
+  }
+
+}
+
+double const_quad_spring_potential::_potential_energy
+  (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions) 
+  const {
+  
+  const auto n = molecular_ids.size();
+  double potential = 0;
+  
+  for (auto i = size_t{0}; i < n; ++i) {
+
+    const double r2 = dot(positions.col(i), positions.col(i));
+    potential += a * r2 * r2 + b * r2 + c;
+
+  }
+
+  return potential;
+}
+
+void const_quad_spring_potential::_increment_forces
+  (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions, 
+   arma::mat& forces) const {
+  
+  const auto n = molecular_ids.size();
+  
+  for (auto i = size_t{0}; i < n; ++i) {
+
+    const double r2 = dot(positions.col(i), positions.col(i));
+    forces.col(i) -= (4 * a * r2 + 2 * b) * positions.col(i);
 
   }
 

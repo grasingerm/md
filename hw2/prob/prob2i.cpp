@@ -45,7 +45,7 @@ int main() {
       save_energy_and_momentum_with_time_callback("2i_data.csv", 100*dt));
   
   // store mass positions and velocities
-  sim.add_callback(save_values_with_time_callback("2i_dofs.csv", 100*dt, 
+  sim.add_callback(save_values_with_time_callback("2i_dofs.csv", 7.5e3*dt, 
         {
           [](const simulation& sim) -> double { 
             return sim.get_positions()(0, 0); // get x position of mass
@@ -67,7 +67,10 @@ int main() {
   cout << "Total simulation time: " << nsteps*sim.get_dt() << '\n';
   cout << "Running simulation for " << nsteps << " steps...\n\n";
   cout << "time U K E=U+K |p|\n" << "==================\n";
+
+  mprof::tic();
   sim.simulate(nsteps);
+  mprof::toc();
 
   return 0;
 }

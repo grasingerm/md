@@ -38,11 +38,42 @@ public:
    * \param   fname   Filename that contains positions of molecules
    * \param   pot     Potential function that acts on molecules
    * \param   dt      Time step size
-   * \param   vscale  Scale for random velocities that are generated 
+   * \param   ti      Time integrator
    * \return        Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname, 
+             abstract_potential* pot, const double dt,
+             const time_integrator& ti) : simulation(id, fname, pot, dt) {
+    time_int = ti;
+  }
+
+  /*! \brief Simulation class with all molecules of the same type
+   *
+   * \param   id      Id of all molecules in the simulation
+   * \param   fname   Filename that contains positions of molecules
+   * \param   pot     Potential function that acts on molecules
+   * \param   dt      Time step size
+   * \param   vscale  Scale for random velocities that are generated 
+   * \return          Molecular simulation object
+   */
+  simulation(const molecular_id id, const char* fname, 
              abstract_potential* pot, const double dt, const double vscale);
+
+  /*! \brief Simulation class with all molecules of the same type
+   *
+   * \param   id      Id of all molecules in the simulation
+   * \param   fname   Filename that contains positions of molecules
+   * \param   pot     Potential function that acts on molecules
+   * \param   dt      Time step size
+   * \param   vscale  Scale for random velocities that are generated 
+   * \param   ti      Time integrator
+   * \return          Molecular simulation object
+   */
+  simulation(const molecular_id id, const char* fname, 
+             abstract_potential* pot, const double dt, const double vscale,
+             const time_integrator& ti) : simulation(id, fname, pot, dt, vscale) {
+    time_int = ti;
+  }
 
   /*! \brief Simulation class with all molecules of the same type
    *
@@ -56,6 +87,24 @@ public:
    */
   simulation(const molecular_id id, const char* fname_pos, 
              const char* fname_vel, abstract_potential* pot, const double dt);
+
+  /*! \brief Simulation class with all molecules of the same type
+   *
+   * \param   id          Id of all molecules in the simulation
+   * \param   fname_pos   Filename that contains positions of molecules
+   * \param   fname_vel   Filename that contains positions of molecules
+   * \param   pot         Potential function that acts on molecules
+   * \param   dt          Time step size
+   * \param   vscale      Scale for random velocities that are generated 
+   * \param   ti          Time integrator
+   * \return              Molecular simulation object
+   */
+  simulation(const molecular_id id, const char* fname_pos, 
+             const char* fname_vel, abstract_potential* pot, const double dt,
+             const time_integrator& ti) : simulation(id, fname_pos, fname_vel, 
+               pot, dt) {
+    time_int = ti;
+  }
 
   ~simulation() {}
 
