@@ -11,6 +11,8 @@ double abstract_LJ_potential::_potential_energy
   const auto n = molecular_ids.size();
   double potential = 0;
   
+  #pragma omp parallel for private(i, j, ri, rj, rij2, rijk, rzero, rat2, rat6) \
+    reduction(+:potential) schedule(dynamic)
   for (auto i = size_t{0}; i < n-1; ++i) {
     for (auto j = i+1; j < n; ++j) {
 
@@ -73,6 +75,7 @@ double abstract_spring_potential::_potential_energy
   const auto n = molecular_ids.size();
   double potential = 0;
   
+  #pragma omp parallel for private(i, r2) reduction(+:potential) schedule(dynamic)
   for (auto i = size_t{0}; i < n; ++i) {
 
     const double r2 = dot(positions.col(i), positions.col(i));
@@ -96,7 +99,7 @@ void abstract_spring_potential::_increment_forces
 
 const_poly_spring_potential::const_poly_spring_potential
   (const std::initializer_list<double>& coeffs) : pcoeffs(coeffs) {
-  
+ 
   for (size_t i = 1; i < pcoeffs.size(); ++i)
     fcoeffs.push_back(pcoeffs[i]*2*i);
 
@@ -109,6 +112,7 @@ double const_poly_spring_potential::_potential_energy
   const auto n = molecular_ids.size();
   double potential = 0;
   
+  #pragma omp parallel for private(i, p, r2, x, k) reduction(+:potential)
   for (auto i = size_t{0}; i < n; ++i) {
 
     const double r2 = dot(positions.col(i), positions.col(i));
@@ -148,6 +152,7 @@ double const_quad_spring_potential::_potential_energy
   const auto n = molecular_ids.size();
   double potential = 0;
   
+  #pragma omp parallel for private(i, r2) reduction(+:potential)
   for (auto i = size_t{0}; i < n; ++i) {
 
     const double r2 = dot(positions.col(i), positions.col(i));

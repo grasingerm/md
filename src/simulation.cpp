@@ -73,7 +73,9 @@ simulation::simulation(const molecular_id id, const char* fname,
   //        velocities
   for (unsigned i = 0; i < 3; ++i) {
     double vsum = 0.0;
+    #pragma omp parallel for private(i, j) reduction(+:vsum)
     for (size_t j = 0; j < n; ++j) vsum += velocities(i, j);
+    #pragma omp parallel for private(i, j)
     for (size_t j = 0; j < n; ++j) velocities(i, j) -= vsum / n;
   }
 
@@ -81,6 +83,7 @@ simulation::simulation(const molecular_id id, const char* fname,
 #ifndef NDEBUG
   for (unsigned i = 0; i < 3; ++i) {
     double sum = 0.0;
+    #pragma omp parallel for private(i, j) reduction(+:sum)
     for (size_t j = 0; j < n; ++j) sum += velocities(i, j);
     assert(abs(sum) < 1.0e-9);
   }
@@ -132,6 +135,8 @@ void simulation::simulate(const unsigned long long nsteps) {
     t += dt;
 
     // Call all of the callback functions
+    // NOTE: callback functions should NOT have data dependencies
+    #pragma omp parallel for
     for (auto& cb : callbacks) cb(*this);
     
   }
@@ -144,6 +149,7 @@ double kinetic_energy(const simulation& sim) {
   const auto& velocities = sim.get_velocities();
 
   double sum = 0.0;
+  #pragma omp parallel for private(i) reduction(+:sum)
   for (size_t i = 0; i < molecular_ids.size(); ++i)
     sum += ma(molecular_ids[i]) * dot(velocities.col(i), velocities.col(i));
 
