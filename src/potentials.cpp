@@ -10,22 +10,22 @@ double abstract_LJ_potential::_potential_energy
   
   const auto n = molecular_ids.size();
   double potential = 0;
+  double rij2, rijk, rzero, rat2, rat6;
   
-  #pragma omp parallel for private(i, j, ri, rj, rij2, rijk, rzero, rat2, rat6) \
+  #pragma omp parallel for private(rij2, rijk, rzero, rat2, rat6) \
     reduction(+:potential) schedule(dynamic)
   for (auto i = size_t{0}; i < n-1; ++i) {
     for (auto j = i+1; j < n; ++j) {
 
-      const double *ri = positions.colptr(i), *rj = positions.colptr(j);
-      double rij2 = 0;
+      rij2 = 0;
       for (auto k = size_t{0}; k < positions.n_rows; ++k) {
-        double rijk = ri[k] - rj[k];
+        rijk = positions(k, i) - positions(k, j);
         rij2 += rijk * rijk;
       }
       
-      const double rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
-      const double rat2 = (rzero * rzero) / rij2;
-      const double rat6 = rat2 * rat2 * rat2;
+      rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
+      rat2 = (rzero * rzero) / rij2;
+      rat6 = rat2 * rat2 * rat2;
       
       potential += 4.0 * get_well_depth(molecular_ids[i], molecular_ids[j]) *
                    (rat6*rat6 - rat6);
@@ -75,11 +75,10 @@ double abstract_spring_potential::_potential_energy
   const auto n = molecular_ids.size();
   double potential = 0;
   
-  #pragma omp parallel for private(i, r2) reduction(+:potential) schedule(dynamic)
+  #pragma omp parallel for reduction(+:potential) schedule(dynamic)
   for (auto i = size_t{0}; i < n; ++i) {
-
-    const double r2 = dot(positions.col(i), positions.col(i));
-    potential += 0.5 * get_k(molecular_ids[i]) * r2;
+    potential += 0.5 * get_k(molecular_ids[i]) * 
+                 dot(positions.col(i), positions.col(i));
 
   }
 
@@ -110,14 +109,14 @@ double const_poly_spring_potential::_potential_energy
   const {
   
   const auto n = molecular_ids.size();
-  double potential = 0;
+  double potential = 0, r2, x;
   
-  #pragma omp parallel for private(i, p, r2, x, k) reduction(+:potential)
+  #pragma omp parallel for private(r2, x) reduction(+:potential)
   for (auto i = size_t{0}; i < n; ++i) {
 
-    const double r2 = dot(positions.col(i), positions.col(i));
+    r2 = dot(positions.col(i), positions.col(i));
     for (auto p = size_t{0}; p < pcoeffs.size(); ++p) {
-      double x = 1;
+      x = 1;
       for (auto k = size_t{0}; k < p; ++k) x *= r2;
       potential += pcoeffs[p] * x;
     }
@@ -150,12 +149,12 @@ double const_quad_spring_potential::_potential_energy
   const {
   
   const auto n = molecular_ids.size();
-  double potential = 0;
+  double potential = 0, r2;
   
-  #pragma omp parallel for private(i, r2) reduction(+:potential)
+  #pragma omp parallel for private(r2) reduction(+:potential)
   for (auto i = size_t{0}; i < n; ++i) {
 
-    const double r2 = dot(positions.col(i), positions.col(i));
+    r2 = dot(positions.col(i), positions.col(i));
     potential += a * r2 * r2 + b * r2 + c;
 
   }
