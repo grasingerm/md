@@ -1,5 +1,0 @@
-The number -23 is negative so that the concept of a perfect square is undefined for real numbers and returns a value of 841636 when inserted into the function f
-The number -12 is negative so that the concept of a perfect square is undefined for real numbers and returns a value of 62781 when inserted into the function f
-The number -1 is negative so that the concept of a perfect square is undefined for real numbers and returns a value of 4 when inserted into the function f
-The number 0 is not a perfect square and returns a value of -3 when inserted into the function f
-The number 2 is not a perfect square and returns a value of 61 when inserted into the function f
