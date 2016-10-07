@@ -1,9 +1,16 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(md)
+project(mmd)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -g -std=c++14 -pedantic -pedantic-errors")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Wextra -std=c++14 -pedantic -pedantic-errors -O3")
+
+# use OpenMP if compiler supports it
+find_package(OpenMP)
+if (OPENMP_FOUND)
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
 set(CMAKE_BINARY_DIR build)
 set(LIBRARY_OUTPUT_PATH lib)
