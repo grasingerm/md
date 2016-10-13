@@ -67,6 +67,101 @@ void abstract_LJ_potential::_increment_forces
 
 }
 
+double abstract_LJ_cutoff_potential::_potential_energy
+  (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions) 
+  const {
+  
+  const auto n = molecular_ids.size();
+
+  const double rc2 = r*r;
+  const double rc4 = rc2*rc2;
+  const double rc8 = rc4*rc4;
+
+  double potential = 0;
+  
+  for (auto i = size_t{0}; i < n-1; ++i) {
+    for (auto j = i+1; j < n; ++j) {
+
+      const double *ri = positions.colptr(i), *rj = positions.colptr(j);
+      double rij2 = 0;
+      for (auto k = size_t{0}; k < positions.n_rows; ++k) {
+        double rijk = ri[k] - rj[k];
+        rij2 += rijk * rijk;
+      }
+
+      if (rij2 < rc2) {
+      
+        const double rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
+        const double rz2 = rzero * rzero;
+        const double rz4 = rz2 * rz2;
+        const double rz8 = rz4 * rz4;
+
+        const double dudr_rc = 6.0 * (rz4*rz2*rzero) / (rc4*rc2*r) - 
+                               12.0 * (rz8*rz4*rzero) / (rc8*rc4*r); 
+        const double u_rc = ((rz8*rz4) / (rc8*rc4) - (rz4*rz2) / (rc4*rc2)); 
+
+        const double rat2 = rz2 / rij2;
+        const double rat6 = rat2 * rat2 * rat2;
+        
+        potential += 4.0 * get_well_depth(molecular_ids[i], molecular_ids[j]) *
+                     ((rat6*rat6 - rat6) + dudr_rc * (r - std::sqrt(rij2)) - 
+                      u_rc);
+
+      }
+
+    }
+  }
+
+  return potential;
+}
+
+void abstract_LJ_cutoff_potential::_increment_forces
+  (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions, 
+   arma::mat& forces) const {
+  
+  const auto n = molecular_ids.size();
+  
+  const double rc2 = r*r;
+  const double rc4 = rc2*rc2;
+  const double rc8 = rc4*rc4;
+
+  for (auto i = size_t{0}; i < n; ++i) {
+    for (auto j = i+1; j < n; ++j) {
+
+      const double *ri = positions.colptr(i), *rj = positions.colptr(j);
+      double rij2 = 0;
+      for (auto k = size_t{0}; k < positions.n_rows; ++k) {
+        double rijk = ri[k] - rj[k];
+        rij2 += rijk * rijk;
+      }
+
+      if (rij2 < rc2) {
+
+        const double rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
+        const double rz2 = rzero * rzero;
+        const double rz4 = rz2 * rz2;
+        const double rz8 = rz4 * rz4;
+
+        const double dudr_rc = 6.0 * (rz4*rz2*rzero) / (rc4*rc2*r) - 
+                               12.0 * (rz8*rz4*rzero) / (rc8*rc4*r);
+
+        const double rat2 = rz2 / rij2;
+        const double rat6 = rat2 * rat2 * rat2;
+        const double rat8 = rat6 * rat2;
+        const double well_depth = get_well_depth(molecular_ids[i], 
+                                                 molecular_ids[j]);
+       
+        const auto fij = (positions.col(i) - positions.col(j)) * well_depth * 
+                         (48.0 * rat8*rat6 - 24.0 * rat8 + dudr_rc / sqrt(rij2));
+        forces.col(i) += fij;
+        forces.col(j) -= fij; // fji = -fij
+
+      }
+    }
+  }
+
+}
+
 double abstract_spring_potential::_potential_energy
   (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions) const {
   

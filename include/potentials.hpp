@@ -129,6 +129,69 @@ private:
   double _rzero;
 };
 
+/*! Public interface for a 6-12 Lennard-Jones pairwise potential with a cutoff
+ */
+class abstract_LJ_cutoff_potential : public abstract_LJ_potential {
+public:
+  /*! \brief Constructor for a LJ potential with a cutoff radius
+   *
+   * \param   radius    Cutoff radius
+   * \return            LJ potential
+   */
+  abstract_LJ_cutoff_potential(double radius) : r(radius) {}
+
+  /*! \brief Get cutoff radius
+   *
+   * \return            Cutoff radius
+   */
+  double get_cutoff() const { return r; }
+
+  virtual ~abstract_LJ_cutoff_potential()=0;
+
+private:
+  virtual double _potential_energy(const std::vector<molecular_id>&, 
+                                   const arma::mat&) const;
+  virtual void _increment_forces(const std::vector<molecular_id>&, 
+                                 const arma::mat&, arma::mat&) const;
+  virtual double _get_well_depth(const molecular_id, const molecular_id) const=0;
+  virtual double _get_rzero(const molecular_id, const molecular_id) const=0;
+
+  double r;
+};
+
+/*! \brief 6-12 Lennard-Jones pairwise potential with a cutoff radius
+ *
+ * Lennard-Jones potential to be used in a simulation where the potential
+ * function between every pair of molecules is the same (i.e. to be used in
+ * a simulation where all of the molecules are of the same type).
+ */
+class const_well_params_LJ_cutoff_potential 
+  : public abstract_LJ_cutoff_potential {
+public:
+  /*! \brief Constructor for a LJ potential with constant well parameters
+   *
+   * \param    well_depth    Depth of the potential well
+   * \param    rzero         Finite distance at which potential is zero
+   * \return                 LJ potential
+   */
+  const_well_params_LJ_cutoff_potential(const double well_depth, const double rzero)
+    : _well_depth(well_depth), _rzero(rzero) {}
+
+  ~const_well_params_LJ_cutoff_potential() {}
+
+private:
+  virtual double _get_well_depth(molecular_id, molecular_id) const { 
+    return _well_depth;
+  }
+
+  virtual double _get_rzero(molecular_id, molecular_id) const {
+    return _rzero;
+  }
+
+  double _well_depth;
+  double _rzero;
+};
+
 /*! \brief Public interface for a spring potential
  */
 class abstract_spring_potential : public abstract_potential {
