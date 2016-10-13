@@ -165,4 +165,16 @@ arma::vec momentum(const simulation& sim) {
 
 }
 
+inline double _temperature_kernel(const double kinetic_energy, const double N,
+                                  const double kB) {
+  return 2.0 * kinetic_energy / (3.0 * (N - 1) * kB);
+}
+
+double temperature(const simulation& sim) {
+  return _temperature_kernel(kinetic_energy(sim), sim.get_N(), /*kB?*/);
+}
+
+/* Virial kernel maybe... */
+inline double _pressure_kernel(const );
+
 } // namespace mmd

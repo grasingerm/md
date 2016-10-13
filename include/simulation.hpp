@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <armadillo>
+#include <array>
 #include "integration.hpp"
 #include "potentials.hpp"
 #include "mmd_types.hpp"
@@ -127,6 +128,14 @@ public:
   inline const std::vector<molecular_id>& get_molecular_ids() const { 
     return molecular_ids;
   }
+
+  /*! \brief Get the number of molecules
+   *
+   * \return  N
+   */
+  inline const size_t get_N() const { 
+    return molecular_ids.size();
+  }
   
   /*! \brief Get the simulation mass accessor
    *
@@ -223,6 +232,40 @@ inline double total_energy(const simulation& sim) {
  * \return        Total momentum
  */
 arma::vec momentum(const simulation& sim);
+
+/*! \brief Calculate the instantaneous temperature for a simulation
+ *
+ * \param   sim   Simulation object
+ * \return        Temperature
+ */
+double temperature(const simulation& sim);
+
+/*! \brief Calculate the instantaneous pressure for a simulation
+ *
+ * \param   sim   Simulation object
+ * \return        Pressure
+ */
+double pressure(const simulation& sim);
+
+/*! \brief Calculate kinetic energy, temperature and pressure for a simulation
+ *
+ * Because kinetic energy, temperature, and pressure are all related, this
+ * function will be more efficient than calling each calculation separately
+ *
+ * \param   sim   Simulation object
+ * \return        Kinetic energy, temperature, and pressure
+ */
+std::array<double, 3> ktp(const simulation& sim);
+
+/*! \brief Calculate the energies, temperature and pressure for a simulation
+ *
+ * Because energies, temperature, and pressure are all related, this
+ * function will be more efficient than calling each calculation separately
+ *
+ * \param   sim   Simulation object
+ * \return        K+U, U, K, temperature, and pressure
+ */
+std::array<double, 5> euktp(const simulation& sim);
 
 } // namespace mmd
 
