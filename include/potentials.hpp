@@ -1,6 +1,12 @@
 #ifndef __POTENTIALS_HPP__
 #define __POTENTIALS_HPP__
 
+/*
+ * TODO: consider wrapping function to find distance between molecules in a 
+ *       function, that way we can easily switch between regular distance, and 
+ *       distance using periodic boundary conditions
+ */
+
 #include <armadillo>
 #include <vector>
 #include <initializer_list>
@@ -129,22 +135,34 @@ private:
   double _rzero;
 };
 
-/*! Public interface for a 6-12 Lennard-Jones pairwise potential with a cutoff
+/*! \brief Public interface for a 6-12 Lennard-Jones potential with a cutoff
+ *
+ * Public interface for a 6-12 Lennard-Jones potential with a cutoff radius
+ * and periodic boundary conditions.
  */
 class abstract_LJ_cutoff_potential : public abstract_LJ_potential {
 public:
   /*! \brief Constructor for a LJ potential with a cutoff radius
    *
-   * \param   radius    Cutoff radius
-   * \return            LJ potential
+   * \param   edge_length    Length of edge of control volume cube
+   * \param   cutoff         Cutoff radius, default value is 2.5
+   * \return                 LJ potential
    */
-  abstract_LJ_cutoff_potential(double radius) : r(radius) {}
+  abstract_LJ_cutoff_potential(const double edge_length, 
+                               const double cutoff=2.5) 
+    : _edge_length(edge_length), _cutoff(cutoff) {}
+
+  /*! \brief Get edge length of control volume
+   *
+   * \return            Edge length
+   */
+  double get_edge_length() const { return _edge_length; }
 
   /*! \brief Get cutoff radius
    *
    * \return            Cutoff radius
    */
-  double get_cutoff() const { return r; }
+  double get_cutoff() const { return _cutoff; }
 
   virtual ~abstract_LJ_cutoff_potential()=0;
 
@@ -156,7 +174,8 @@ private:
   virtual double _get_well_depth(const molecular_id, const molecular_id) const=0;
   virtual double _get_rzero(const molecular_id, const molecular_id) const=0;
 
-  double r;
+  double _edge_length;
+  double _cutoff;
 };
 
 /*! \brief 6-12 Lennard-Jones pairwise potential with a cutoff radius
@@ -174,8 +193,12 @@ public:
    * \param    rzero         Finite distance at which potential is zero
    * \return                 LJ potential
    */
-  const_well_params_LJ_cutoff_potential(const double well_depth, const double rzero)
-    : _well_depth(well_depth), _rzero(rzero) {}
+  const_well_params_LJ_cutoff_potential(const double well_depth, 
+                                        const double rzero,
+                                        const double edge_length,
+                                        const double cutoff=2.5)
+    : abstract_LJ_cutoff_potential(edge_length, cutoff), 
+      _well_depth(well_depth), _rzero(rzero) {}
 
   ~const_well_params_LJ_cutoff_potential() {}
 
