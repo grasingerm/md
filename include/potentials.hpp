@@ -168,7 +168,7 @@ public:
       _rc6(_rc2 * _rc2 * _rc2), _rc7(_rc6 * _cutoff), _rc12(_rc6 * _rc6),
       _rc13(_rc6 * _rc7) {}
 
-  virtual ~abstract_LJ_cutoff_potential() {}
+  virtual ~abstract_LJ_cutoff_potential()=0;
 
   /*! \brief Get edge length of control volume
    *

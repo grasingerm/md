@@ -1,9 +1,11 @@
+#include <iostream>
 #include <fstream>
 #include <random>
 #include <string>
 #include <stdexcept>
 #include <cassert>
 #include "simulation.hpp"
+#include "distance.hpp"
 
 namespace mmd {
 
@@ -137,17 +139,24 @@ simulation::simulation(const molecular_id id, const char* fname_pos,
 }
 
 void simulation::simulate(const unsigned long long nsteps) {
-  for (unsigned k = 0; k < nsteps; ++k) {
 
-    // Integrate in time
-    time_int(potentials, molecular_ids, positions, velocities, forces, dt, ma);
+  try {
+    for (unsigned k = 0; k < nsteps; ++k) {
 
-    // Update clock 
-    t += dt;
+      // Integrate in time
+      time_int(potentials, molecular_ids, positions, velocities, forces, dt, ma);
 
-    // Call all of the callback functions
-    for (auto& cb : callbacks) cb(*this);
-    
+      // Update clock 
+      t += dt;
+
+      // Call all of the callback functions
+      for (auto& cb : callbacks) cb(*this);
+      
+    }
+  }
+  catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << '\n';
+    throw e;
   }
 }
 
@@ -198,6 +207,12 @@ double ideal_pressure(const simulation& sim) {
                                 sim.get_kB());
 }
 
+/* TODO: can't I just use the forces calculated from integration? sum Fi dot ri?
+ * TODO: the periodic BC concept has become a mess..., feels like it would be
+ *       much better to encapsulate the concept of a metric in the simulation
+ *       object itself (that then forwards that information along), either
+ *       using inheritance or composition. Gut says composition
+ */
 double virial_pressure(const simulation& sim) {
   const auto n = sim.get_N();
   const auto& positions = sim.get_positions();
@@ -208,7 +223,7 @@ double virial_pressure(const simulation& sim) {
     for (auto i = size_t{0}; i < n-1; ++i)
       for (auto j = i+1; j < n; ++j)
         // rij dot Fij
-        vp += dot((positions.col(i) - positions.col(j)), 
+        vp += dot(rij_pbc(positions, i, j, sim.get_edge_length()), 
                   potential->force_ij(sim.get_molecular_ids(), 
                                       sim.get_positions(), i, j));
 

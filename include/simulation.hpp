@@ -204,6 +204,12 @@ public:
    *
    * \return  Volume
    */
+  inline double get_edge_length() const { return edge_length; }
+
+  /*! \brief Get the volume
+   *
+   * \return  Volume
+   */
   inline double get_volume() const { return volume; }
 
   /*! \brief Get the simulation Boltzmann's constant
@@ -224,6 +230,7 @@ private:
   double dt;
   double t;
   std::vector<callback> callbacks;
+  double edge_length;
   double volume;
   double kB;
 };
