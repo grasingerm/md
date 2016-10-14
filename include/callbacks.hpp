@@ -12,6 +12,10 @@
 #include "simulation.hpp"
 #include "mprof.hpp"
 
+/* TODO: can we create a callback that caches values, then callbacks that read
+ *       the cache?
+ */
+
 namespace mmd {
 
 /*! \brief Wrapper for accessing molecular positions

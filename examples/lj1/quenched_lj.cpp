@@ -29,7 +29,7 @@ int main() {
   for (const auto& file : files) {
     for (unsigned i = 0; i < 3; ++i) {
       quenched_velocity_verlet qv(etas[i]); 
-      simulation sim(molecular_id::Test, file.c_str(), &pot, dt, qv);
+      simulation sim(molecular_id::Test, file.c_str(), &pot, dt, qv, 1.0);
  
       // print energy and momentum
       sim.add_callback(print_energy_and_momentum_with_time_callback(2.0 / 4));

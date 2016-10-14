@@ -12,7 +12,7 @@ int main() {
   const_well_params_LJ_potential pot(1.0, 1.0);
 
   cout << "Initializing simulation...\n\n";
-  simulation sim(molecular_id::Test, "10.txt", &pot, dt);
+  simulation sim(molecular_id::Test, "10.txt", &pot, dt, 1.0);
 
   // Print out initial conditions for diagnositc purposes
   cout << "Initial positions...\n";
@@ -43,7 +43,6 @@ int main() {
   sim.add_callback(check_energy(100*dt, 1e-3));
   
   // check momentum is conserved
-  // momentum is NOT conserved for this problem...
   sim.add_callback(check_momentum(100*dt, 1e-6));
   
   // store energy and momentum

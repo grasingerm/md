@@ -41,14 +41,8 @@ public:
     return _potential_energy(molecular_ids, positions);
   }
   
-  /*! \brief Calculates total potential energy of the current configuration
+  /*! \brief Increment the current forces by the gradient of the potential
    * 
-   * Calculates the total potential energy of the current configuration given
-   * each molecule type and molecule position. The molecular positions (and 
-   * forces) are stored in a matrix such that the ith column vector is the 
-   * position (force) vector of the ith molecule. This function is a mutator
-   * that increments the matrix of forces.
-   *
    * \param    molecular_ids   Collection of molecular identities
    * \param    positions       Collection of molecular positions
    * \param    forces          Collection of force vectors
@@ -59,11 +53,29 @@ public:
     _check_arg_sizes(molecular_ids, positions, forces);
     _increment_forces(molecular_ids, positions, forces);
   }
+
+  /*! \brief Increment the current forces by the gradient of the potential
+   * 
+   * \param    molecular_ids   Collection of molecular identities
+   * \param    positions       Collection of molecular positions
+   * \param    i               Index of forced molecule
+   * \param    j               Index of forcing molecule
+   * \return                   Force on molecule i due to molecule j
+   */
+  inline arma::vec force_ij(const std::vector<molecular_id>& molecular_ids,
+                            const arma::mat& positions, const size_t i, 
+                            const size_t j) const {
+    _check_arg_sizes(molecular_ids, positions);
+    return _force_ij(molecular_ids, positions, i, j);
+  }
+
 private:
   virtual double _potential_energy(const std::vector<molecular_id>&, 
                                    const arma::mat&) const=0;
   virtual void _increment_forces(const std::vector<molecular_id>&, 
                                  const arma::mat&, arma::mat&) const=0;
+  virtual arma::vec _force_ij(const std::vector<molecular_id>&, const arma::mat&,
+                              const size_t, const size_t) const=0;
 };
 
 /*! Public interface for a 6-12 Lennard-Jones pairwise potential
@@ -99,6 +111,8 @@ private:
                                    const arma::mat&) const;
   virtual void _increment_forces(const std::vector<molecular_id>&, 
                                  const arma::mat&, arma::mat&) const;
+  virtual arma::vec _force_ij(const std::vector<molecular_id>&, const arma::mat&,
+                              const size_t, const size_t) const;
   virtual double _get_well_depth(const molecular_id, const molecular_id) const=0;
   virtual double _get_rzero(const molecular_id, const molecular_id) const=0;
 };
@@ -150,7 +164,11 @@ public:
    */
   abstract_LJ_cutoff_potential(const double edge_length, 
                                const double cutoff=2.5) 
-    : _edge_length(edge_length), _cutoff(cutoff) {}
+    : _edge_length(edge_length), _cutoff(cutoff), _rc2(_cutoff * _cutoff), 
+      _rc6(_rc2 * _rc2 * _rc2), _rc7(_rc6 * _cutoff), _rc12(_rc6 * _rc6),
+      _rc13(_rc6 * _rc7) {}
+
+  virtual ~abstract_LJ_cutoff_potential() {}
 
   /*! \brief Get edge length of control volume
    *
@@ -164,18 +182,24 @@ public:
    */
   double get_cutoff() const { return _cutoff; }
 
-  virtual ~abstract_LJ_cutoff_potential()=0;
-
 private:
   virtual double _potential_energy(const std::vector<molecular_id>&, 
                                    const arma::mat&) const;
   virtual void _increment_forces(const std::vector<molecular_id>&, 
                                  const arma::mat&, arma::mat&) const;
+  virtual arma::vec _force_ij(const std::vector<molecular_id>&, const arma::mat&,
+                              const size_t, const size_t) const;
   virtual double _get_well_depth(const molecular_id, const molecular_id) const=0;
   virtual double _get_rzero(const molecular_id, const molecular_id) const=0;
 
   double _edge_length;
   double _cutoff;
+
+  double _rc2;
+  double _rc6;
+  double _rc7;
+  double _rc12;
+  double _rc13;
 };
 
 /*! \brief 6-12 Lennard-Jones pairwise potential with a cutoff radius
@@ -235,6 +259,13 @@ private:
                                    const arma::mat&) const;
   virtual void _increment_forces(const std::vector<molecular_id>&, 
                                  const arma::mat&, arma::mat&) const;
+
+  virtual arma::vec _force_ij(const std::vector<molecular_id>&, 
+                              const arma::mat&, const size_t, 
+                              const size_t) const {
+    return arma::zeros(3);
+  }
+
   virtual double _get_k(molecular_id) const=0;
 };
 
@@ -289,6 +320,12 @@ private:
   virtual void _increment_forces(const std::vector<molecular_id>&, 
                                  const arma::mat&, arma::mat&) const;
 
+  virtual arma::vec _force_ij(const std::vector<molecular_id>&, 
+                              const arma::mat&, const size_t, 
+                              const size_t) const {
+    return arma::zeros(3);
+  }
+
   double a;
   double b;
   double c;
@@ -318,6 +355,12 @@ private:
   virtual void _increment_forces(const std::vector<molecular_id>&, 
                                  const arma::mat&, arma::mat&) const;
 
+  virtual arma::vec _force_ij(const std::vector<molecular_id>&, 
+                              const arma::mat&, const size_t, 
+                              const size_t) const {
+    return arma::zeros(3);
+  }
+
   std::vector<double> pcoeffs;
   std::vector<double> fcoeffs;
 };
@@ -329,27 +372,41 @@ public:
   /*! \brief Constructor for generic potential
    *
    * \param    potential_f   Potential function
-   * \return   force_f       Force function
+   * \return   force_f       Increment forces function
+   * \return   force_ij      Force between molecules function
    */
   generic_potential(std::function <double(const std::vector<molecular_id>&, 
         const arma::mat&)> potential_f, std::function <void(const 
-        std::vector<molecular_id>&, const arma::mat&, arma::mat&)> force_f)
-    : potential_f(potential_f), force_f(force_f) {}
+        std::vector<molecular_id>&, const arma::mat&, arma::mat&)> force_f, 
+        std::function <arma::vec(const std::vector<molecular_id>&, const arma::mat&, 
+        const size_t, const size_t)> force_ij)
+    : potential_f(potential_f), force_f(force_f), force_ij(force_ij) {}
 
   ~generic_potential() {}
 
 private:
   inline double _potential_energy
     (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions) 
-    const { return potential_f(molecular_ids, positions); }
+    const final { return potential_f(molecular_ids, positions); }
+
   inline void _increment_forces
     (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions, 
-     arma::mat& forces) const { force_f(molecular_ids, positions, forces); }
+     arma::mat& forces) const final { 
+      force_f(molecular_ids, positions, forces); 
+  }
+
+  inline arma::vec _force_ij(const std::vector<molecular_id>& molecular_ids, 
+                             const arma::mat& positions,
+                             const size_t i, const size_t j) const final {
+    return force_ij(molecular_ids, positions, i, j);
+  }
 
   std::function <double(const std::vector<molecular_id>&, const arma::mat&)> 
     potential_f;
   std::function <void(const std::vector<molecular_id>&, const arma::mat&, 
                       arma::mat&)> force_f;
+  std::function <arma::vec(const std::vector<molecular_id>&, const arma::mat&, 
+                      const size_t, const size_t)> force_ij;
 };
 
 } // namespace mmd

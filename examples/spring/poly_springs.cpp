@@ -15,11 +15,11 @@ int main() {
   vector<string> names({"2ii_025_p", "2ii_100_p", "2ii_025_m", "2ii_100_m", "2ii_200"});
 
   vector<simulation> sims({
-      { molecular_id::Test, "2ii_025_p_init.xyz", "2ii_025_p_init.uvw", &spr, dt },
-      { molecular_id::Test, "2ii_100_p_init.xyz", "2ii_100_p_init.uvw", &spr, dt },
-      { molecular_id::Test, "2ii_025_m_init.xyz", "2ii_025_m_init.uvw", &spr, dt },
-      { molecular_id::Test, "2ii_100_m_init.xyz", "2ii_100_m_init.uvw", &spr, dt },
-      { molecular_id::Test, "2ii_200_init.xyz", "2ii_200_init.uvw", &spr, dt }
+      { molecular_id::Test, "2ii_025_p_init.xyz", "2ii_025_p_init.uvw", &spr, dt, 1.0 },
+      { molecular_id::Test, "2ii_100_p_init.xyz", "2ii_100_p_init.uvw", &spr, dt, 1.0 },
+      { molecular_id::Test, "2ii_025_m_init.xyz", "2ii_025_m_init.uvw", &spr, dt, 1.0 },
+      { molecular_id::Test, "2ii_100_m_init.xyz", "2ii_100_m_init.uvw", &spr, dt, 1.0 },
+      { molecular_id::Test, "2ii_200_init.xyz", "2ii_200_init.uvw", &spr, dt, 1.0 }
     });
 
   // check energy is conserved (every 100 time steps)

@@ -12,7 +12,7 @@ int main() {
   const_k_spring_potential spr(1.0);
 
   cout << "Initializing simulation...\n\n";
-  simulation sim(molecular_id::Test, "2i_init.xyz", "2i_init.uvw", &spr, dt);
+  simulation sim(molecular_id::Test, "2i_init.xyz", "2i_init.uvw", &spr, dt, 1.0);
 
   // Print out initial conditions for diagnositc purposes
   cout << "Initial positions...\n";

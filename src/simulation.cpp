@@ -14,9 +14,11 @@ using namespace arma;
 const time_integrator simulation::default_time_int = velocity_verlet;
 
 simulation::simulation(const molecular_id id, const char* fname, 
-                       abstract_potential* pot, const double dt)
+                       abstract_potential* pot, const double dt,
+                       const double edge_length)
   : ma([](molecular_id) -> double { return 1.0; }), potentials(size_t{1}, pot), 
-    time_int(simulation::default_time_int), dt(dt), t(0.0) {
+    time_int(simulation::default_time_int), dt(dt), t(0.0), volume(edge_length *
+    edge_length * edge_length), kB(simulation::default_kB) {
 
   string line;
   ifstream infile(fname, ifstream::in);
@@ -55,15 +57,20 @@ simulation::simulation(const molecular_id id, const char* fname,
 
 simulation::simulation(const molecular_id id, const char* fname, 
                        abstract_potential* pot, const double dt, 
-                       const double vscale) : simulation(id, fname, pot, dt) {
+                       const double tstar, const double edge_length) 
+  : simulation(id, fname, pot, dt, edge_length) {
+
+  const double vscale = sqrt(2.0 * tstar * 3.0 * (get_N() - 1) / 2.0);
 
   default_random_engine generator;
-  normal_distribution<double> dist(0.0, vscale);
+  normal_distribution<double> distx(0.0, vscale);
+  normal_distribution<double> disty(0.0, vscale);
+  normal_distribution<double> distz(0.0, vscale);
 
   for (size_t i = 0; i < velocities.n_cols; ++i) {
-    velocities(0, i) = dist(generator);
-    velocities(1, i) = dist(generator);
-    velocities(2, i) = dist(generator);
+    velocities(0, i) = distx(generator);
+    velocities(1, i) = disty(generator);
+    velocities(2, i) = distz(generator);
   }
 
   const auto n = molecular_ids.size();
@@ -85,12 +92,19 @@ simulation::simulation(const molecular_id id, const char* fname,
     assert(abs(sum) < 1.0e-9);
   }
 #endif
+
+  // scale temperature
+  const double sqrt_alpha = sqrt(tstar / temperature(*this));
+  for (size_t j = 0; j < n; ++j)
+    velocities.col(j) *= sqrt_alpha;
+
+  assert(abs(temperature(*this) - tstar) < 1e-9);
 }
 
 simulation::simulation(const molecular_id id, const char* fname_pos,
                        const char* fname_vel, abstract_potential* pot, 
-                       const double dt) 
-  : simulation(id, fname_pos, pot, dt) {
+                       const double dt, const double edge_length) 
+  : simulation(id, fname_pos, pot, dt, edge_length) {
 
   string line;
   ifstream infile(fname_vel, ifstream::in);
@@ -171,10 +185,62 @@ inline double _temperature_kernel(const double kinetic_energy, const double N,
 }
 
 double temperature(const simulation& sim) {
-  return _temperature_kernel(kinetic_energy(sim), sim.get_N(), /*kB?*/);
+  return _temperature_kernel(kinetic_energy(sim), sim.get_N(), sim.get_kB());
 }
 
-/* Virial kernel maybe... */
-inline double _pressure_kernel(const );
+inline double _ideal_pressure_kernel(const double temperature, const double N,
+                                     const double volume, const double kB){
+  return N * temperature * kB / volume;
+}
+
+double ideal_pressure(const simulation& sim) {
+  return _ideal_pressure_kernel(temperature(sim), sim.get_N(), sim.get_volume(),
+                                sim.get_kB());
+}
+
+double virial_pressure(const simulation& sim) {
+  const auto n = sim.get_N();
+  const auto& positions = sim.get_positions();
+  double vp = 0.0;
+
+  for (const auto potential : sim.get_potentials())
+    #pragma omp parallel for reduction(+:vp) schedule(dynamic)
+    for (auto i = size_t{0}; i < n-1; ++i)
+      for (auto j = i+1; j < n; ++j)
+        // rij dot Fij
+        vp += dot((positions.col(i) - positions.col(j)), 
+                  potential->force_ij(sim.get_molecular_ids(), 
+                                      sim.get_positions(), i, j));
+
+  return vp / (3.0 * sim.get_volume());
+}
+
+array<double, 3> ktp(const simulation& sim) {
+
+  array<double, 3> result;
+
+  result[0] = kinetic_energy(sim);
+  result[1] = _temperature_kernel(result[0], sim.get_N(), sim.get_kB());
+  result[2] = _ideal_pressure_kernel(result[1], sim.get_N(), sim.get_volume(),
+                                     sim.get_kB()) + virial_pressure(sim);
+
+  return result;
+
+}
+
+array<double, 5> euktp(const simulation& sim) {
+
+  array<double, 5> result;
+
+  result[2] = kinetic_energy(sim);
+  result[3] = _temperature_kernel(result[2], sim.get_N(), sim.get_kB());
+  result[4] = _ideal_pressure_kernel(result[3], sim.get_N(), sim.get_volume(),
+                                     sim.get_kB()) + virial_pressure(sim);
+  result[1] = potential_energy(sim);
+  result[0] = result[1] + result[2];
+
+  return result;
+
+}
 
 } // namespace mmd

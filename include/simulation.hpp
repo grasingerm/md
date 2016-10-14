@@ -8,6 +8,10 @@
 #include "potentials.hpp"
 #include "mmd_types.hpp"
 
+/* TODO: using default_time_int as a default param might be cleaner than all of
+ *       the many overloads
+ */
+
 namespace mmd {
 
 /*! \brief Simulation object that tracks molecular degrees of freedom
@@ -18,92 +22,105 @@ namespace mmd {
  */
 class simulation {
 
-private: static const time_integrator default_time_int;
+private: 
+  static const time_integrator default_time_int;
+  static constexpr double default_kB = 1.0;
 
 public:
 
   /*! \brief Simulation class with all molecules of the same type
    *
-   * \param   id      Id of all molecules in the simulation
-   * \param   fname   Filename that contains positions of molecules
-   * \param   pot     Potential function that acts on molecules
-   * \param   dt      Time step size
-   * \return        Molecular simulation object
+   * \param   id            Id of all molecules in the simulation
+   * \param   fname         Filename that contains positions of molecules
+   * \param   pot           Potential function that acts on molecules
+   * \param   dt            Time step size
+   * \param   edge_length   Edge length of the control volume
+   * \return                Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname, 
-             abstract_potential* pot, const double dt);
+             abstract_potential* pot, const double dt, 
+             const double edge_length);
 
   /*! \brief Simulation class with all molecules of the same type
    *
-   * \param   id      Id of all molecules in the simulation
-   * \param   fname   Filename that contains positions of molecules
-   * \param   pot     Potential function that acts on molecules
-   * \param   dt      Time step size
-   * \param   ti      Time integrator
-   * \return        Molecular simulation object
+   * \param   id            Id of all molecules in the simulation
+   * \param   fname         Filename that contains positions of molecules
+   * \param   pot           Potential function that acts on molecules
+   * \param   dt            Time step size
+   * \param   ti            Time integrator
+   * \param   edge_length   Edge length of the control volume
+   * \return                Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname, 
              abstract_potential* pot, const double dt,
-             const time_integrator& ti) : simulation(id, fname, pot, dt) {
+             const time_integrator& ti, const double edge_length) 
+    : simulation(id, fname, pot, dt, edge_length) {
     time_int = ti;
   }
 
   /*! \brief Simulation class with all molecules of the same type
    *
-   * \param   id      Id of all molecules in the simulation
-   * \param   fname   Filename that contains positions of molecules
-   * \param   pot     Potential function that acts on molecules
-   * \param   dt      Time step size
-   * \param   vscale  Scale for random velocities that are generated 
-   * \return          Molecular simulation object
+   * \param   id            Id of all molecules in the simulation
+   * \param   fname         Filename that contains positions of molecules
+   * \param   pot           Potential function that acts on molecules
+   * \param   dt            Time step size
+   * \param   tstar         Non-dimensional temperature
+   * \param   edge_length   Edge length of the control volume
+   * \return                Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname, 
-             abstract_potential* pot, const double dt, const double vscale);
+             abstract_potential* pot, const double dt, const double tstar,
+             const double edge_length);
 
   /*! \brief Simulation class with all molecules of the same type
    *
-   * \param   id      Id of all molecules in the simulation
-   * \param   fname   Filename that contains positions of molecules
-   * \param   pot     Potential function that acts on molecules
-   * \param   dt      Time step size
-   * \param   vscale  Scale for random velocities that are generated 
-   * \param   ti      Time integrator
-   * \return          Molecular simulation object
+   * \param   id            Id of all molecules in the simulation
+   * \param   fname         Filename that contains positions of molecules
+   * \param   pot           Potential function that acts on molecules
+   * \param   dt            Time step size
+   * \param   tstar         Non-dimensional temperature
+   * \param   ti            Time integrator
+   * \param   edge_length   Edge length of the control volume
+   * \return                Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname, 
-             abstract_potential* pot, const double dt, const double vscale,
-             const time_integrator& ti) : simulation(id, fname, pot, dt, vscale) {
+             abstract_potential* pot, const double dt, const double tstar,
+             const time_integrator& ti, const double edge_length) 
+    : simulation(id, fname, pot, dt, tstar, edge_length) {
     time_int = ti;
   }
 
   /*! \brief Simulation class with all molecules of the same type
    *
-   * \param   id          Id of all molecules in the simulation
-   * \param   fname_pos   Filename that contains positions of molecules
-   * \param   fname_vel   Filename that contains positions of molecules
-   * \param   pot         Potential function that acts on molecules
-   * \param   dt          Time step size
-   * \param   vscale      Scale for random velocities that are generated 
-   * \return        Molecular simulation object
-   */
-  simulation(const molecular_id id, const char* fname_pos, 
-             const char* fname_vel, abstract_potential* pot, const double dt);
-
-  /*! \brief Simulation class with all molecules of the same type
-   *
-   * \param   id          Id of all molecules in the simulation
-   * \param   fname_pos   Filename that contains positions of molecules
-   * \param   fname_vel   Filename that contains positions of molecules
-   * \param   pot         Potential function that acts on molecules
-   * \param   dt          Time step size
-   * \param   vscale      Scale for random velocities that are generated 
-   * \param   ti          Time integrator
-   * \return              Molecular simulation object
+   * \param   id            Id of all molecules in the simulation
+   * \param   fname_pos     Filename that contains positions of molecules
+   * \param   fname_vel     Filename that contains positions of molecules
+   * \param   pot           Potential function that acts on molecules
+   * \param   dt            Time step size
+   * \param   vscale        Scale for random velocities that are generated 
+   * \param   edge_length   Edge length of the control volume
+   * \return                Molecular simulation object
    */
   simulation(const molecular_id id, const char* fname_pos, 
              const char* fname_vel, abstract_potential* pot, const double dt,
-             const time_integrator& ti) : simulation(id, fname_pos, fname_vel, 
-               pot, dt) {
+             const double edge_length);
+
+  /*! \brief Simulation class with all molecules of the same type
+   *
+   * \param   id            Id of all molecules in the simulation
+   * \param   fname_pos     Filename that contains positions of molecules
+   * \param   fname_vel     Filename that contains positions of molecules
+   * \param   pot           Potential function that acts on molecules
+   * \param   dt            Time step size
+   * \param   vscale        Scale for random velocities that are generated 
+   * \param   ti            Time integrator
+   * \param   edge_length   Edge length of the control volume
+   * \return                Molecular simulation object
+   */
+  simulation(const molecular_id id, const char* fname_pos, 
+             const char* fname_vel, abstract_potential* pot, const double dt,
+             const time_integrator& ti, const double edge_length) 
+    : simulation(id, fname_pos, fname_vel, pot, dt, edge_length) {
     time_int = ti;
   }
 
@@ -133,7 +150,7 @@ public:
    *
    * \return  N
    */
-  inline const size_t get_N() const { 
+  inline size_t get_N() const { 
     return molecular_ids.size();
   }
   
@@ -183,6 +200,18 @@ public:
    */
   inline double get_dt() const { return dt; }
 
+  /*! \brief Get the volume
+   *
+   * \return  Volume
+   */
+  inline double get_volume() const { return volume; }
+
+  /*! \brief Get the simulation Boltzmann's constant
+   *
+   * \return  Boltzmann's constant
+   */
+  inline double get_kB() const { return kB; }
+
 private:
 
   std::vector<molecular_id> molecular_ids;
@@ -195,6 +224,8 @@ private:
   double dt;
   double t;
   std::vector<callback> callbacks;
+  double volume;
+  double kB;
 };
 
 /*! \brief Calculate the total potential energy for a simulation
@@ -240,12 +271,28 @@ arma::vec momentum(const simulation& sim);
  */
 double temperature(const simulation& sim);
 
+/*! \brief Calculate the instantaneous pressure due to ideal gas EOS
+ *
+ * \param   sim   Simulation object
+ * \return        Ideal gas pressure
+ */
+double ideal_pressure(const simulation& sim);
+
+/*! \brief Calculate the instantaneous virial pressure
+ *
+ * \param   sim   Simulation object
+ * \return        Virial pressure
+ */
+double virial_pressure(const simulation& sim);
+
 /*! \brief Calculate the instantaneous pressure for a simulation
  *
  * \param   sim   Simulation object
  * \return        Pressure
  */
-double pressure(const simulation& sim);
+inline double pressure(const simulation& sim) {
+  return ideal_pressure(sim) + virial_pressure(sim);
+}
 
 /*! \brief Calculate kinetic energy, temperature and pressure for a simulation
  *

@@ -12,6 +12,7 @@ double _rij2(const arma::mat& positions, const size_t i, const size_t j) {
     double rijk = ri[k] - rj[k];
     rij2 += rijk * rijk;
   }
+  return rij2;
 }
 
 /* Local helper function for determining distances between molecules */
@@ -29,8 +30,28 @@ double _rij2_pbc(const arma::mat& positions, const size_t i, const size_t j,
 
     rij2 += rijk * rijk;
   }
+  return rij2;
 }
 
+/* Local helper function for determining distances between molecules */
+arma::vec _rij_pbc(const arma::mat& positions, const size_t i, const size_t j,
+                   const double edge_length) {
+
+  arma::vec rij = positions.col(i) - positions.col(j);
+
+  /* correct for periodic boundary conditions using nearest image convention 
+   */
+  if (rij(0) > edge_length / 2.0) rij(0) -= edge_length;
+  else if (rij(0) < -edge_length / 2.0) rij(0) += edge_length;
+
+  if (rij(1) > edge_length / 2.0) rij(1) -= edge_length;
+  else if (rij(1) < -edge_length / 2.0) rij(1) += edge_length;
+
+  if (rij(2) > edge_length / 2.0) rij(2) -= edge_length;
+  else if (rij(2) < -edge_length / 2.0) rij(2) += edge_length;
+
+  return rij;
+}
 
 /* Definitions for interface, potentials.hpp */
 double abstract_LJ_potential::_potential_energy
@@ -63,19 +84,10 @@ void abstract_LJ_potential::_increment_forces
   
   const auto n = molecular_ids.size();
   
-  for (auto i = size_t{0}; i < n; ++i) {
+  for (auto i = size_t{0}; i < n-1; ++i) {
     for (auto j = i+1; j < n; ++j) {
-
-      const double rij2 = _rij2(positions, i, j);
-      const double rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
-      const double rat2 = (rzero * rzero) / rij2;
-      const double rat6 = rat2 * rat2 * rat2;
-      const double rat8 = rat6 * rat2;
-      const double well_depth = get_well_depth(molecular_ids[i], 
-                                               molecular_ids[j]);
      
-      const auto fij = (positions.col(i) - positions.col(j)) * well_depth * 
-                       (48.0 * rat8*rat6 - 24.0 * rat8);
+      const auto fij = _force_ij(molecular_ids, positions, i, j);
       forces.col(i) += fij;
       forces.col(j) -= fij; // fji = -fij
 
@@ -84,16 +96,28 @@ void abstract_LJ_potential::_increment_forces
 
 }
 
+arma::vec abstract_LJ_potential::_force_ij
+  (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions, 
+   const size_t i, const size_t j) const {
+  
+  const double rij2 = _rij2(positions, i, j);
+  const double rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
+  const double rat2 = (rzero * rzero) / rij2;
+  const double rat6 = rat2 * rat2 * rat2;
+  const double rat8 = rat6 * rat2;
+  const double well_depth = get_well_depth(molecular_ids[i], 
+                                           molecular_ids[j]);
+ 
+  return (positions.col(i) - positions.col(j)) * well_depth * 
+         (48.0 * rat8*rat6 - 24.0 * rat8);
+
+}
+
 double abstract_LJ_cutoff_potential::_potential_energy
   (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions) 
   const {
   
   const auto n = molecular_ids.size();
-
-  const double rc2 = _cutoff * _cutoff;
-  const double rc4 = rc2 * rc2;
-  const double rc8 = rc4 * rc4;
-
   double potential = 0;
   
   for (auto i = size_t{0}; i < n-1; ++i) {
@@ -101,23 +125,23 @@ double abstract_LJ_cutoff_potential::_potential_energy
 
       const double rij2 = _rij2_pbc(positions, i, j, _edge_length);
 
-      if (rij2 < rc2) {
+      if (rij2 <= _rc2) {
       
         const double rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
         const double rz2 = rzero * rzero;
         const double rz4 = rz2 * rz2;
         const double rz8 = rz4 * rz4;
 
-        const double dudr_rc = 6.0 * (rz4*rz2*rzero) / (rc4*rc2*_cutoff) - 
-                               12.0 * (rz8*rz4*rzero) / (rc8*rc4*_cutoff); 
-        const double u_rc = ((rz8*rz4) / (rc8*rc4) - (rz4*rz2) / (rc4*rc2)); 
+        const double dudr_rc = 6.0 * (rz4*rz2*rzero) / (_rc7) - 
+                               12.0 * (rz8*rz4*rzero) / (_rc13); 
+        const double u_rc = ((rz8*rz4) / (_rc12) - (rz4*rz2) / (_rc6)); 
 
         const double rat2 = rz2 / rij2;
         const double rat6 = rat2 * rat2 * rat2;
         
         potential += 4.0 * get_well_depth(molecular_ids[i], molecular_ids[j]) *
-                     ((rat6*rat6 - rat6) + dudr_rc * (_cutoff - std::sqrt(rij2)) 
-                      - u_rc);
+                     ((rat6*rat6 - rat6) - u_rc - 
+                      (sqrt(rij2) - _cutoff) * dudr_rc);
 
       }
 
@@ -133,39 +157,47 @@ void abstract_LJ_cutoff_potential::_increment_forces
   
   const auto n = molecular_ids.size();
   
-  const double rc2 = _cutoff * _cutoff;
-  const double rc4 = rc2 * rc2;
-  const double rc8 = rc4 * rc4;
-
-  for (auto i = size_t{0}; i < n; ++i) {
+  for (auto i = size_t{0}; i < n-1; ++i) {
     for (auto j = i+1; j < n; ++j) {
 
-      const double rij2 = _rij2_pbc(positions, i, j, _edge_length);
+      const auto fij = _force_ij(molecular_ids, positions, i, j);
+      forces.col(i) += fij;
+      forces.col(j) -= fij; // fji = -fij
 
-      if (rij2 < rc2) {
-
-        const double rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
-        const double rz2 = rzero * rzero;
-        const double rz4 = rz2 * rz2;
-        const double rz8 = rz4 * rz4;
-
-        const double dudr_rc = 6.0 * (rz4*rz2*rzero) / (rc4*rc2*_cutoff) - 
-                               12.0 * (rz8*rz4*rzero) / (rc8*rc4*_cutoff);
-
-        const double rat2 = rz2 / rij2;
-        const double rat6 = rat2 * rat2 * rat2;
-        const double rat8 = rat6 * rat2;
-        const double well_depth = get_well_depth(molecular_ids[i], 
-                                                 molecular_ids[j]);
-       
-        const auto fij = (positions.col(i) - positions.col(j)) * well_depth * 
-                         (48.0 * rat8*rat6 - 24.0 * rat8 + dudr_rc / sqrt(rij2));
-        forces.col(i) += fij;
-        forces.col(j) -= fij; // fji = -fij
-
-      }
     }
   }
+
+}
+
+arma::vec abstract_LJ_cutoff_potential::_force_ij
+  (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions, 
+   const size_t i, const size_t j) const {
+  
+  const auto rij = _rij_pbc(positions, i, j, _edge_length);
+  const double rij2 = dot(rij, rij);
+
+  if (rij2 <= _rc2) {
+
+    const double rzero = get_rzero(molecular_ids[i], molecular_ids[j]);
+    const double rz2 = rzero * rzero;
+    const double rz4 = rz2 * rz2;
+    const double rz8 = rz4 * rz4;
+
+    const double dudr_rc = 24.0 * (rz4*rz2*rzero) / (_rc7) - 
+                           48.0 * (rz8*rz4*rzero) / (_rc13);
+
+    const double rat2 = rz2 / rij2;
+    const double rat6 = rat2 * rat2 * rat2;
+    const double rat8 = rat6 * rat2;
+    const double well_depth = get_well_depth(molecular_ids[i], 
+                                             molecular_ids[j]);
+   
+    return rij * well_depth * 
+           (48.0 * rat8*rat6 - 24.0 * rat8 + dudr_rc / sqrt(rij2));
+  
+  }
+
+  return arma::zeros(3);
 
 }
 
