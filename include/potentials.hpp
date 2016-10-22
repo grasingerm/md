@@ -2,16 +2,16 @@
 #define __POTENTIALS_HPP__
 
 /*
- * TODO: consider wrapping function to find distance between molecules in a 
- *       function, that way we can easily switch between regular distance, and 
+ * TODO: consider wrapping function to find distance between molecules in a
+ *       function, that way we can easily switch between regular distance, and
  *       distance using periodic boundary conditions
  */
 
+#include "debug.hpp"
 #include <armadillo>
-#include <vector>
 #include <initializer_list>
 #include <stdexcept>
-#include "debug.hpp"
+#include <vector>
 
 namespace mmd {
 
@@ -22,67 +22,68 @@ namespace mmd {
  */
 class abstract_potential {
 public:
-  virtual ~abstract_potential()=0;
+  virtual ~abstract_potential() = 0;
 
   /*! \brief Calculates total potential energy of the current configuration
    *
    * Calculates the total potential energy of the current configuration given
    * each molecule type and molecule position. The molecular positions are
-   * stored in a matrix such that the ith column vector is the position vector 
+   * stored in a matrix such that the ith column vector is the position vector
    * of the ith molecule.
    *
    * \param    molecular_ids   Collection of molecular identities
-   * \param    positions       Matrix of molecular positions 
+   * \param    positions       Matrix of molecular positions
    * \return                   Potential energy of the current configuration
    */
-  inline double potential_energy(const std::vector<molecular_id>& molecular_ids, 
-                                 const arma::mat& positions) const {
+  inline double potential_energy(const std::vector<molecular_id> &molecular_ids,
+                                 const arma::mat &positions) const {
     _check_arg_sizes(molecular_ids, positions);
     return _potential_energy(molecular_ids, positions);
   }
-  
+
   /*! \brief Increment the current forces by the gradient of the potential
-   * 
+   *
    * \param    molecular_ids   Collection of molecular identities
    * \param    positions       Collection of molecular positions
    * \param    forces          Collection of force vectors
    */
-  inline void increment_forces(const std::vector<molecular_id>& molecular_ids, 
-                               const arma::mat& positions, arma::mat& forces) 
-    const {
+  inline void increment_forces(const std::vector<molecular_id> &molecular_ids,
+                               const arma::mat &positions,
+                               arma::mat &forces) const {
     _check_arg_sizes(molecular_ids, positions, forces);
     _increment_forces(molecular_ids, positions, forces);
   }
 
   /*! \brief Increment the current forces by the gradient of the potential
-   * 
+   *
    * \param    molecular_ids   Collection of molecular identities
    * \param    positions       Collection of molecular positions
    * \param    i               Index of forced molecule
    * \param    j               Index of forcing molecule
    * \return                   Force on molecule i due to molecule j
    */
-  inline arma::vec force_ij(const std::vector<molecular_id>& molecular_ids,
-                            const arma::mat& positions, const size_t i, 
+  inline arma::vec force_ij(const std::vector<molecular_id> &molecular_ids,
+                            const arma::mat &positions, const size_t i,
                             const size_t j) const {
     _check_arg_sizes(molecular_ids, positions);
     return _force_ij(molecular_ids, positions, i, j);
   }
 
 private:
-  virtual double _potential_energy(const std::vector<molecular_id>&, 
-                                   const arma::mat&) const=0;
-  virtual void _increment_forces(const std::vector<molecular_id>&, 
-                                 const arma::mat&, arma::mat&) const=0;
-  virtual arma::vec _force_ij(const std::vector<molecular_id>&, const arma::mat&,
-                              const size_t, const size_t) const=0;
+  virtual double _potential_energy(const std::vector<molecular_id> &,
+                                   const arma::mat &) const = 0;
+  virtual void _increment_forces(const std::vector<molecular_id> &,
+                                 const arma::mat &, arma::mat &) const = 0;
+  virtual arma::vec _force_ij(const std::vector<molecular_id> &,
+                              const arma::mat &, const size_t,
+                              const size_t) const = 0;
 };
 
 /*! Public interface for a 6-12 Lennard-Jones pairwise potential
  */
 class abstract_LJ_potential : public abstract_potential {
 public:
-  virtual ~abstract_LJ_potential()=0;
+  virtual ~abstract_LJ_potential() = 0;
 
   /*! \brief Get the well depth of the potential (epsilon)
    *
@@ -90,31 +91,33 @@ public:
    * \param    id2   Molecular id of the second molecule
    * \return         Depth of the potential well
    */
-  inline double get_well_depth(const molecular_id id1, const molecular_id id2) 
-    const { 
-    return _get_well_depth(id1, id2); 
+  inline double get_well_depth(const molecular_id id1,
+                               const molecular_id id2) const {
+    return _get_well_depth(id1, id2);
   }
-  
+
   /*! \brief Get the distance at which the potential is zero (sigma)
    *
    * \param    id1   Molecular id of the first molecule
    * \param    id2   Molecular id of the second molecule
    * \return         Zero of the potential
    */
-  inline double get_rzero (const molecular_id id1, const molecular_id id2) 
-    const { 
-    return _get_rzero(id1, id2); 
+  inline double get_rzero(const molecular_id id1,
+                          const molecular_id id2) const {
+    return _get_rzero(id1, id2);
   }
 
 private:
-  virtual double _potential_energy(const std::vector<molecular_id>&, 
-                                   const arma::mat&) const;
-  virtual void _increment_forces(const std::vector<molecular_id>&, 
-                                 const arma::mat&, arma::mat&) const;
-  virtual arma::vec _force_ij(const std::vector<molecular_id>&, const arma::mat&,
-                              const size_t, const size_t) const;
-  virtual double _get_well_depth(const molecular_id, const molecular_id) const=0;
-  virtual double _get_rzero(const molecular_id, const molecular_id) const=0;
+  virtual double _potential_energy(const std::vector<molecular_id> &,
+                                   const arma::mat &) const;
+  virtual void _increment_forces(const std::vector<molecular_id> &,
+                                 const arma::mat &, arma::mat &) const;
+  virtual arma::vec _force_ij(const std::vector<molecular_id> &,
+                              const arma::mat &, const size_t,
+                              const size_t) const;
+  virtual double _get_well_depth(const molecular_id,
+                                 const molecular_id) const = 0;
+  virtual double _get_rzero(const molecular_id, const molecular_id) const = 0;
 };
 
 /*! \brief 6-12 Lennard-Jones pairwise potential
@@ -132,18 +135,16 @@ public:
    * \return                 LJ potential
    */
   const_well_params_LJ_potential(const double well_depth, const double rzero)
-    : _well_depth(well_depth), _rzero(rzero) {}
+      : _well_depth(well_depth), _rzero(rzero) {}
 
   ~const_well_params_LJ_potential() {}
 
 private:
-  virtual double _get_well_depth(molecular_id, molecular_id) const { 
+  virtual double _get_well_depth(molecular_id, molecular_id) const {
     return _well_depth;
   }
 
-  virtual double _get_rzero(molecular_id, molecular_id) const {
-    return _rzero;
-  }
+  virtual double _get_rzero(molecular_id, molecular_id) const { return _rzero; }
 
   double _well_depth;
   double _rzero;
@@ -162,13 +163,13 @@ public:
    * \param   cutoff         Cutoff radius, default value is 2.5
    * \return                 LJ potential
    */
-  abstract_LJ_cutoff_potential(const double edge_length, 
-                               const double cutoff=2.5) 
-    : _edge_length(edge_length), _cutoff(cutoff), _rc2(_cutoff * _cutoff), 
-      _rc6(_rc2 * _rc2 * _rc2), _rc7(_rc6 * _cutoff), _rc12(_rc6 * _rc6),
-      _rc13(_rc6 * _rc7) {}
+  abstract_LJ_cutoff_potential(const double edge_length,
+                               const double cutoff = 2.5)
+      : _edge_length(edge_length), _cutoff(cutoff), _rc2(_cutoff * _cutoff),
+        _rc6(_rc2 * _rc2 * _rc2), _rc7(_rc6 * _cutoff), _rc12(_rc6 * _rc6),
+        _rc13(_rc6 * _rc7) {}
 
-  virtual ~abstract_LJ_cutoff_potential()=0;
+  virtual ~abstract_LJ_cutoff_potential() = 0;
 
   /*! \brief Get edge length of control volume
    *
@@ -183,14 +184,16 @@ public:
   double get_cutoff() const { return _cutoff; }
 
 private:
-  virtual double _potential_energy(const std::vector<molecular_id>&, 
-                                   const arma::mat&) const;
-  virtual void _increment_forces(const std::vector<molecular_id>&, 
-                                 const arma::mat&, arma::mat&) const;
-  virtual arma::vec _force_ij(const std::vector<molecular_id>&, const arma::mat&,
-                              const size_t, const size_t) const;
-  virtual double _get_well_depth(const molecular_id, const molecular_id) const=0;
-  virtual double _get_rzero(const molecular_id, const molecular_id) const=0;
+  virtual double _potential_energy(const std::vector<molecular_id> &,
+                                   const arma::mat &) const;
+  virtual void _increment_forces(const std::vector<molecular_id> &,
+                                 const arma::mat &, arma::mat &) const;
+  virtual arma::vec _force_ij(const std::vector<molecular_id> &,
+                              const arma::mat &, const size_t,
+                              const size_t) const;
+  virtual double _get_well_depth(const molecular_id,
+                                 const molecular_id) const = 0;
+  virtual double _get_rzero(const molecular_id, const molecular_id) const = 0;
 
   double _edge_length;
   double _cutoff;
@@ -208,8 +211,8 @@ private:
  * function between every pair of molecules is the same (i.e. to be used in
  * a simulation where all of the molecules are of the same type).
  */
-class const_well_params_LJ_cutoff_potential 
-  : public abstract_LJ_cutoff_potential {
+class const_well_params_LJ_cutoff_potential
+    : public abstract_LJ_cutoff_potential {
 public:
   /*! \brief Constructor for a LJ potential with constant well parameters
    *
@@ -217,23 +220,21 @@ public:
    * \param    rzero         Finite distance at which potential is zero
    * \return                 LJ potential
    */
-  const_well_params_LJ_cutoff_potential(const double well_depth, 
+  const_well_params_LJ_cutoff_potential(const double well_depth,
                                         const double rzero,
                                         const double edge_length,
-                                        const double cutoff=2.5)
-    : abstract_LJ_cutoff_potential(edge_length, cutoff), 
-      _well_depth(well_depth), _rzero(rzero) {}
+                                        const double cutoff = 2.5)
+      : abstract_LJ_cutoff_potential(edge_length, cutoff),
+        _well_depth(well_depth), _rzero(rzero) {}
 
   ~const_well_params_LJ_cutoff_potential() {}
 
 private:
-  virtual double _get_well_depth(molecular_id, molecular_id) const { 
+  virtual double _get_well_depth(molecular_id, molecular_id) const {
     return _well_depth;
   }
 
-  virtual double _get_rzero(molecular_id, molecular_id) const {
-    return _rzero;
-  }
+  virtual double _get_rzero(molecular_id, molecular_id) const { return _rzero; }
 
   double _well_depth;
   double _rzero;
@@ -243,30 +244,28 @@ private:
  */
 class abstract_spring_potential : public abstract_potential {
 public:
-  virtual ~abstract_spring_potential()=0;
+  virtual ~abstract_spring_potential() = 0;
 
   /*! \brief Get the spring constant
    *
    * \param    id    Molecular id of the molecule
    * \return         Spring constant
    */
-  inline double get_k(molecular_id id) const { 
-    return _get_k(id); 
-  }
+  inline double get_k(molecular_id id) const { return _get_k(id); }
 
 private:
-  virtual double _potential_energy(const std::vector<molecular_id>&, 
-                                   const arma::mat&) const;
-  virtual void _increment_forces(const std::vector<molecular_id>&, 
-                                 const arma::mat&, arma::mat&) const;
+  virtual double _potential_energy(const std::vector<molecular_id> &,
+                                   const arma::mat &) const;
+  virtual void _increment_forces(const std::vector<molecular_id> &,
+                                 const arma::mat &, arma::mat &) const;
 
-  virtual arma::vec _force_ij(const std::vector<molecular_id>&, 
-                              const arma::mat&, const size_t, 
+  virtual arma::vec _force_ij(const std::vector<molecular_id> &,
+                              const arma::mat &, const size_t,
                               const size_t) const {
     return arma::zeros(3);
   }
 
-  virtual double _get_k(molecular_id) const=0;
+  virtual double _get_k(molecular_id) const = 0;
 };
 
 /*! \brief Potential due to a spring with constant k
@@ -277,7 +276,8 @@ private:
  */
 class const_k_spring_potential : public abstract_spring_potential {
 public:
-  /*! \brief Constructor for potential with same spring constant for all molecules
+  /*! \brief Constructor for potential with same spring constant for all
+   * molecules
    *
    * Constructor for potential with same spring constant for all molecules.
    * Requires: k > 0
@@ -302,26 +302,27 @@ private:
  */
 class const_quad_spring_potential : public abstract_potential {
 public:
-  /*! \brief Constructor for potential with same spring parameters for all molecules
+  /*! \brief Constructor for potential with same spring parameters for all
+   * molecules
    *
    * Constructor for potential with same spring constant for all molecules.
    *
    * \param    k     Spring constant
    * \return         Spring potential
    */
-  const_quad_spring_potential(const double a, const double b, const double c) 
-    : a(a), b(b), c(c) {}
+  const_quad_spring_potential(const double a, const double b, const double c)
+      : a(a), b(b), c(c) {}
 
   virtual ~const_quad_spring_potential() {}
 
 private:
-  virtual double _potential_energy(const std::vector<molecular_id>&, 
-                                   const arma::mat&) const;
-  virtual void _increment_forces(const std::vector<molecular_id>&, 
-                                 const arma::mat&, arma::mat&) const;
+  virtual double _potential_energy(const std::vector<molecular_id> &,
+                                   const arma::mat &) const;
+  virtual void _increment_forces(const std::vector<molecular_id> &,
+                                 const arma::mat &, arma::mat &) const;
 
-  virtual arma::vec _force_ij(const std::vector<molecular_id>&, 
-                              const arma::mat&, const size_t, 
+  virtual arma::vec _force_ij(const std::vector<molecular_id> &,
+                              const arma::mat &, const size_t,
                               const size_t) const {
     return arma::zeros(3);
   }
@@ -333,30 +334,31 @@ private:
 
 /*! \brief Potential due to a spring with a polynomial potential
  *
- * Potential due to a spring in which the potential, a x^n + b x^-1 + ..., 
+ * Potential due to a spring in which the potential, a x^n + b x^-1 + ...,
  * is the same for all molecules, regardless of molecular id.
  */
 class const_poly_spring_potential : public abstract_potential {
 public:
-  /*! \brief Constructor for potential with same spring potential for all molecules
+  /*! \brief Constructor for potential with same spring potential for all
+   * molecules
    *
    * Constructor for potential with same spring constant for all molecules.
    *
    * \param    coeffs   Polynomial coefficients
    * \return            Spring potential
    */
-  const_poly_spring_potential(const std::initializer_list<double>& coeffs); 
+  const_poly_spring_potential(const std::initializer_list<double> &coeffs);
 
   virtual ~const_poly_spring_potential() {}
 
 private:
-  virtual double _potential_energy(const std::vector<molecular_id>&, 
-                                   const arma::mat&) const;
-  virtual void _increment_forces(const std::vector<molecular_id>&, 
-                                 const arma::mat&, arma::mat&) const;
+  virtual double _potential_energy(const std::vector<molecular_id> &,
+                                   const arma::mat &) const;
+  virtual void _increment_forces(const std::vector<molecular_id> &,
+                                 const arma::mat &, arma::mat &) const;
 
-  virtual arma::vec _force_ij(const std::vector<molecular_id>&, 
-                              const arma::mat&, const size_t, 
+  virtual arma::vec _force_ij(const std::vector<molecular_id> &,
+                              const arma::mat &, const size_t,
                               const size_t) const {
     return arma::zeros(3);
   }
@@ -375,38 +377,47 @@ public:
    * \return   force_f       Increment forces function
    * \return   force_ij      Force between molecules function
    */
-  generic_potential(std::function <double(const std::vector<molecular_id>&, 
-        const arma::mat&)> potential_f, std::function <void(const 
-        std::vector<molecular_id>&, const arma::mat&, arma::mat&)> force_f, 
-        std::function <arma::vec(const std::vector<molecular_id>&, const arma::mat&, 
-        const size_t, const size_t)> force_ij)
-    : potential_f(potential_f), force_f(force_f), force_ij(force_ij) {}
+  generic_potential(
+      std::function<double(const std::vector<molecular_id> &,
+                           const arma::mat &)>
+          potential_f,
+      std::function<void(const std::vector<molecular_id> &, const arma::mat &,
+                         arma::mat &)>
+          force_f,
+      std::function<arma::vec(const std::vector<molecular_id> &,
+                              const arma::mat &, const size_t, const size_t)>
+          force_ij)
+      : potential_f(potential_f), force_f(force_f), force_ij(force_ij) {}
 
   ~generic_potential() {}
 
 private:
-  inline double _potential_energy
-    (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions) 
-    const final { return potential_f(molecular_ids, positions); }
-
-  inline void _increment_forces
-    (const std::vector<molecular_id>& molecular_ids, const arma::mat& positions, 
-     arma::mat& forces) const final { 
-      force_f(molecular_ids, positions, forces); 
+  inline double
+  _potential_energy(const std::vector<molecular_id> &molecular_ids,
+                    const arma::mat &positions) const final {
+    return potential_f(molecular_ids, positions);
   }
 
-  inline arma::vec _force_ij(const std::vector<molecular_id>& molecular_ids, 
-                             const arma::mat& positions,
-                             const size_t i, const size_t j) const final {
+  inline void _increment_forces(const std::vector<molecular_id> &molecular_ids,
+                                const arma::mat &positions,
+                                arma::mat &forces) const final {
+    force_f(molecular_ids, positions, forces);
+  }
+
+  inline arma::vec _force_ij(const std::vector<molecular_id> &molecular_ids,
+                             const arma::mat &positions, const size_t i,
+                             const size_t j) const final {
     return force_ij(molecular_ids, positions, i, j);
   }
 
-  std::function <double(const std::vector<molecular_id>&, const arma::mat&)> 
-    potential_f;
-  std::function <void(const std::vector<molecular_id>&, const arma::mat&, 
-                      arma::mat&)> force_f;
-  std::function <arma::vec(const std::vector<molecular_id>&, const arma::mat&, 
-                      const size_t, const size_t)> force_ij;
+  std::function<double(const std::vector<molecular_id> &, const arma::mat &)>
+      potential_f;
+  std::function<void(const std::vector<molecular_id> &, const arma::mat &,
+                     arma::mat &)>
+      force_f;
+  std::function<arma::vec(const std::vector<molecular_id> &, const arma::mat &,
+                          const size_t, const size_t)>
+      force_ij;
 };
 
 } // namespace mmd
