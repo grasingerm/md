@@ -19,18 +19,9 @@ namespace mmd {
  * forces. This calculation is first order accurate in dt.
  * Requires: dt > 0
  *
- * \param   potentials    Potential energy functions (e.g. spring, LJ, etc.)
- * \param   molecular_ids Collection of molecular identities
- * \param   positions     Matrix of molecular positions
- * \param   velocities    Matrix of molecular velocities
- * \param   forces        Matrix of molecular forces
- * \param   dt            Time step size
- * \param   ma            Function for looking up molecular mass
+ * \param   sim            Simulation object
  */
-void euler(std::vector<abstract_potential *> &potentials,
-           std::vector<molecular_id> &molecular_ids, arma::mat &positions,
-           arma::mat &velocities, arma::mat &forces, const double dt,
-           const mass_accessor &ma);
+void euler(simulation &sim);
 
 /*! \brief Time integration using Euler integration
  *
@@ -43,19 +34,9 @@ void euler(std::vector<abstract_potential *> &potentials,
  * This calculation is first order accurate in dt.
  * Requires: dt > 0
  *
- * \param   potentials    Potential energy functions (e.g. spring, LJ, etc.)
- * \param   molecular_ids Collection of molecular identities
- * \param   positions     Matrix of molecular positions
- * \param   velocities    Matrix of molecular velocities
- * \param   forces        Matrix of molecular forces
- * \param   dt            Time step size
- * \param   ma            Function for looking up molecular mass
- * \param   edge_length   Edge length of the control volume cube
+ * \param   sim   Simulation object
  */
-void euler_pbc(std::vector<abstract_potential *> &potentials,
-               std::vector<molecular_id> &molecular_ids, arma::mat &positions,
-               arma::mat &velocities, arma::mat &forces, const double dt,
-               const mass_accessor &ma, const double edge_length);
+void euler_pbc(simulation &sim);
 
 /*! \brief Time integration using Velocity Verlet algorithm
  *
@@ -67,19 +48,9 @@ void euler_pbc(std::vector<abstract_potential *> &potentials,
  * forces. This calculation is fourth order accurate in dt.
  * Requires: dt > 0
  *
- * \param   potentials    Potential energy functions (e.g. spring, LJ, etc.)
- * \param   molecular_ids Collection of molecular identities
- * \param   positions     Matrix of molecular positions
- * \param   velocities    Matrix of molecular velocities
- * \param   forces        Matrix of molecular forces
- * \param   dt            Time step size
- * \param   ma            Function for looking up molecular mass
+ * \param   sim            Simulation object
  */
-void velocity_verlet(std::vector<abstract_potential *> &potentials,
-                     std::vector<molecular_id> &molecular_ids,
-                     arma::mat &positions, arma::mat &velocities,
-                     arma::mat &forces, const double dt,
-                     const mass_accessor &ma);
+void velocity_verlet(simulation &sim);
 
 /*! \brief Time integration using Velocity Verlet algorithm
  *
@@ -92,20 +63,9 @@ void velocity_verlet(std::vector<abstract_potential *> &potentials,
  * This calculation is fourth order accurate in dt.
  * Requires: dt > 0
  *
- * \param   potentials    Potential energy functions (e.g. spring, LJ, etc.)
- * \param   molecular_ids Collection of molecular identities
- * \param   positions     Matrix of molecular positions
- * \param   velocities    Matrix of molecular velocities
- * \param   forces        Matrix of molecular forces
- * \param   dt            Time step size
- * \param   ma            Function for looking up molecular mass
- * \param   edge_length   Edge length of the control volume cube
+ * \param   sim    Simulation object
  */
-void velocity_verlet_pbc(std::vector<abstract_potential *> &potentials,
-                         std::vector<molecular_id> &molecular_ids,
-                         arma::mat &positions, arma::mat &velocities,
-                         arma::mat &forces, const double dt,
-                         const mass_accessor &ma, const double edge_length);
+void velocity_verlet_pbc(simulation &sim);
 
 /*! \brief Time integration using a "quenching", Velocity Verlet algorithm
  *
@@ -134,41 +94,33 @@ public:
    * integration scheme slowly removes kinetic energy from the system.
    * Requires: dt > 0
    *
-   * \param   potentials    Potential energy functions (e.g. spring, LJ, etc.)
-   * \param   molecular_ids Collection of molecular identities
-   * \param   positions     Matrix of molecular positions
-   * \param   velocities    Matrix of molecular velocities
-   * \param   forces        Matrix of molecular forces
-   * \param   dt            Time step size
-   * \param   ma            Function for looking up molecular mass
+   * \param   sim            Simulation object
    */
-  void operator()(std::vector<abstract_potential *> &potentials,
-                  std::vector<molecular_id> &molecular_ids,
-                  arma::mat &positions, arma::mat &velocities,
-                  arma::mat &forces, const double dt,
-                  const mass_accessor &ma) const;
+  void operator()(simulation &sim) const;
 
 private:
   double eta;
 };
 
-/*! \brief Time integration using a Velocity Verlet algorithm with periodic BCs
+/*! \brief Time integration for NVT ensemble using a Verlet with periodic BCs
  *
  * Update the position and velocity of a molecule due to the instantaneous
- * forces acting on it for a given time step.
+ * forces acting on it for a given time step. Uses the Nose-Hoover thermostat
+ * equations of motion and velocity Verlet integration.
  * Requires: dt > 0
  */
-class periodic_velocity_verlet {
+class nose_hoover_velocity_verlet_pbc {
 public:
-  /*! \brief Constructor for velocity verlet with periodic BCs
+  /*! \brief Constructor for Nose-Hoover velocity verlet with periodic BCs
    *
-   * \param   edge_length   Edge length of control volume
-   * \return                Periodic velocity verlet
+   * \param   T_set         Set temperature
+   * \param   tau_T         Thermostat time constant
+   * \return                Nose-Hoover, periodic velocity verlet
    */
-  periodic_velocity_verlet(const double edge_length)
-      : edge_length(edge_length) {}
+  nose_hoover_velocity_verlet_pbc(const double T_set, const double tau_T)
+      : eta(0.0), T_set(T_set), tau_Tsq(tau_T*tau_T) {}
 
-  /*! \brief Time integration using Velocity Verlet algorithm with periodic BCs
+  /*! \brief Time integration using Nose-Hoover Verlet with periodic BCs
    *
    * Update the position and velocity of a molecule due to the instantaneous
    * forces acting on it for a given time step. The molecular positions
@@ -178,25 +130,14 @@ public:
    * forces. This calculation is fourth order accurate in dt.
    * Requires: dt > 0
    *
-   * \param   potentials    Potential energy functions (e.g. spring, LJ, etc.)
-   * \param   molecular_ids Collection of molecular identities
-   * \param   positions     Matrix of molecular positions
-   * \param   velocities    Matrix of molecular velocities
-   * \param   forces        Matrix of molecular forces
-   * \param   dt            Time step size
-   * \param   ma            Function for looking up molecular mass
+   * \param   sim           Simulation object
    */
-  inline void operator()(std::vector<abstract_potential *> &potentials,
-                         std::vector<molecular_id> &molecular_ids,
-                         arma::mat &positions, arma::mat &velocities,
-                         arma::mat &forces, const double dt,
-                         const mass_accessor &ma) const {
-    velocity_verlet_pbc(potentials, molecular_ids, positions, velocities,
-                        forces, dt, ma, edge_length);
-  }
+  void operator()(simulation &sim);
 
 private:
-  double edge_length;
+  mutable double eta;
+  double T_set;
+  double tau_Tsq;
 };
 
 } // namespace mmd

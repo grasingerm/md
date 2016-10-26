@@ -11,6 +11,7 @@ using namespace mmd;
 int main() {
 
   static const double dt = 0.002;
+  static const double tau_T = 0.05;
   static const long long nsteps = 100000;
   static const double total_time = dt * nsteps;
   static const double L = 6.8;
@@ -29,12 +30,11 @@ int main() {
     const double density = k * drho + density_bounds[0];
    
     const_well_params_LJ_cutoff_potential pot(1.0, 1.0, L, 2.5);
+    nose_hoover_velocity_verlet_pbc time_int(tstar, tau_T); 
     
     simulation sim(molecular_id::Test, "liquid256_init.xyz", density, &pot, dt, 
-                   tstar, velocity_verlet_pbc, L);
+                   tstar, time_int, L);
   
-    sim.add_mutator(equilibrate_temperature(tstar, 1e-2, 100));
-    //sim.add_callback(check_energy(50*dt, 1e-3));
     sim.add_callback(check_momentum(50*dt, 1e-6));
     sim.add_callback([&](const simulation& sim) {
       if (fmod(sim.get_time(), 1000*dt) < dt) {

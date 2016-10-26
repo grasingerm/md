@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <array>
 
 /* TODO: can we create a callback that caches values, then callbacks that read
  *       the cache?
@@ -167,6 +168,80 @@ private:
   char delim;
 };
 
+/*! \brief Callback for saving data values to a delimited file
+ */
+template <size_t N> class save_vector_with_time_callback {
+public:
+  /*! \brief Constructor for callback function that saves delimited data
+   *
+   * \param   fname   File name of the output file
+   * \param   dt      Frequency with which to write data
+   * \param   ras     Row accessor
+   * \param   delim   Character delimiter
+   * \return          Callback function
+   */
+  save_vector_with_time_callback<N>(
+      const char *fname, const double dt,
+      std::function<std::array<double, N>(const simulation&)> ras, 
+      const char delim = ',')
+      : fname(fname), outfile(fname), dt(dt), ras(ras), delim(delim) {
+    if (dt < 0)
+      throw std::invalid_argument("Time between callbacks, dt, "
+                                  "must be positive");
+  }
+
+  /*! \brief Constructor for callback function that saves delimited data
+   *
+   * \param   fname   File name of the output file
+   * \param   dt      Frequency with which to write data
+   * \param   vas     Functions for accessing simulation values
+   * \param   delim   Character delimiter
+   * \return          Callback function
+   */
+  save_vector_with_time_callback<N>(
+      const std::string &fname, const double dt,
+      std::function<std::array<double, N>(const simulation&)> ras, 
+      const char delim = ',')
+      : fname(fname), outfile(fname), dt(dt), ras(ras), delim(delim) {
+    if (dt < 0)
+      throw std::invalid_argument("Time between callbacks, dt, "
+                                  "must be positive");
+  }
+
+  /*! \brief Copy constructor
+   *
+   * \param   cb      Callback function to copy
+   * \return          Callback function
+   */
+  save_vector_with_time_callback<N>(const save_vector_with_time_callback<N> &cb)
+      : fname(cb.fname), outfile(cb.fname), dt(cb.dt), ras(cb.ras),
+        delim(cb.delim) {}
+
+  ~save_vector_with_time_callback<N>() { outfile.close(); }
+
+  void operator()(const simulation &sim) {
+    if (fmod(sim.get_time(), dt) < sim.get_dt()) {
+      outfile << sim.get_time();
+      const auto &values = ras(sim);
+      for (const auto &value : values) outfile << delim << value;
+      outfile << '\n';
+    }
+  }
+
+  /*! \brief Get filename of the output file
+   *
+   * \return    Filename of the output file
+   */
+  inline const std::string &get_fname() const { return fname; }
+
+private:
+  std::string fname;
+  std::ofstream outfile;
+  double dt;
+  std::function<std::array<double, N>(const simulation&)> ras;
+  char delim;
+};
+
 /*! Factory for constructing an energy and momentum saving callback
  *
  * \param   fname   File name of the output file
@@ -280,6 +355,46 @@ print_energy_and_momentum_with_time_callback(const double dt,
                       }},
       delim);
 }
+
+/*! \brief Callback for printing data values to a delimited file
+ */
+template <size_t N> class print_vector_with_time_callback {
+public:
+  /*! \brief Constructor for callback function that prints data
+   *
+   * \param   ostr    Output stream
+   * \param   dt      Frequency with which to write data
+   * \param   ras     Row accessor
+   * \param   delim   Character delimiter
+   * \return          Callback function
+   */
+  print_vector_with_time_callback<N>(
+      std::ostream &ostr, const double dt,
+      std::function<std::array<double, N>(const simulation&)> ras, 
+      const char delim = ',')
+      : ostr(ostr), dt(dt), ras(ras), delim(delim) {
+    if (dt < 0)
+      throw std::invalid_argument("Time between callbacks, dt, "
+                                  "must be positive");
+  }
+
+  ~print_vector_with_time_callback<N>() {}
+
+  void operator()(const simulation &sim) {
+    if (fmod(sim.get_time(), dt) < sim.get_dt()) {
+      ostr << sim.get_time();
+      const auto &values = ras(sim);
+      for (const auto &value : values) ostr << delim << value;
+      ostr << '\n';
+    }
+  }
+
+private:
+  std::ostream &ostr;
+  double dt;
+  std::function<std::array<double, N>(const simulation&)> ras;
+  char delim;
+};
 
 /*! \brief Check conservation of energy
  *

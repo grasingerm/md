@@ -261,8 +261,7 @@ void simulation::simulate(const unsigned long long nsteps) {
     for (unsigned k = 0; k < nsteps; ++k) {
 
       // Integrate in time
-      time_int(potentials, molecular_ids, positions, velocities, forces, dt,
-               ma);
+      time_int(*this);
 
       // Update clock
       t += dt;
@@ -279,6 +278,7 @@ void simulation::simulate(const unsigned long long nsteps) {
     std::cerr << "Error: " << e.what() << '\n';
     throw e;
   }
+
 }
 
 double kinetic_energy(const simulation &sim) {
