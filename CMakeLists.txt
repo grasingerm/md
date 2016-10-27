@@ -12,6 +12,15 @@ if (OPENMP_FOUND)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
+# TODO: this should no longer be necessary
+#if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+#  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
+#endif()
+#
+#if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+#  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+#endif()
+
 set(CMAKE_BINARY_DIR build)
 set(LIBRARY_OUTPUT_PATH lib)
 set(EXECUTABLE_OUTPUT_PATH bin)

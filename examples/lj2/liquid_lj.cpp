@@ -20,7 +20,7 @@ int main() {
 
   cout << "Initial temperature... " << temperature(sim) * 121.0 << '\n';
 
-  sim.add_mutator(equilibrate_temperature(tstar, 1e-2, 1000));
+  sim.add_mutator(equilibrate_temperature(tstar, 1e-2, 5000));
 
   //sim.add_callback(check_energy(50*dt, 1e-3));
   sim.add_callback(check_momentum(50*dt, 1e-6));

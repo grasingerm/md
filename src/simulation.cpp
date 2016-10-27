@@ -339,7 +339,6 @@ double virial_pressure(const simulation &sim) {
   double vp = 0.0;
 
   for (const auto potential : sim.get_potentials())
-#pragma omp parallel for reduction(+ : vp) schedule(dynamic)
     for (auto i = size_t{0}; i < n - 1; ++i)
       for (auto j = i + 1; j < n; ++j)
         // rij dot Fij
