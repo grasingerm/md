@@ -343,7 +343,7 @@ double virial_pressure(const simulation &sim) {
     for (auto i = size_t{0}; i < n - 1; ++i)
       for (auto j = i + 1; j < n; ++j)
         // rij dot Fij
-        vp += dot(rij_pbc(positions, i, j, sim.get_edge_length()),
+        vp += dot(-rij_pbc(positions, i, j, sim.get_edge_length()),
                   potential->force_ij(sim.get_molecular_ids(),
                                       sim.get_positions(), i, j));
 
@@ -372,6 +372,21 @@ array<double, 5> euktp(const simulation &sim) {
   result[4] = _ideal_pressure_kernel(result[3], sim.get_N(), sim.get_volume(),
                                      sim.get_kB()) +
               virial_pressure(sim);
+  result[1] = potential_energy(sim);
+  result[0] = result[1] + result[2];
+
+  return result;
+}
+
+array<double, 7> euktpiv(const simulation &sim) {
+  array<double, 7> result;
+
+  result[2] = kinetic_energy(sim);
+  result[3] = _temperature_kernel(result[2], sim.get_N(), sim.get_kB());
+  result[5] = _ideal_pressure_kernel(result[3], sim.get_N(), sim.get_volume(),
+                                     sim.get_kB());
+  result[6] = virial_pressure(sim);
+  result[4] = result[5] + result[6];
   result[1] = potential_energy(sim);
   result[0] = result[1] + result[2];
 

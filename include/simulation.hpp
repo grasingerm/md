@@ -407,6 +407,16 @@ std::array<double, 3> ktp(const simulation &sim);
  */
 std::array<double, 5> euktp(const simulation &sim);
 
+/*! \brief Calculate the energies, temperature and pressure for a simulation
+ *
+ * Because energies, temperature, and pressure are all related, this
+ * function will be more efficient than calling each calculation separately
+ *
+ * \param   sim   Simulation object
+ * \return        K+U, U, K, temperature, pressure, ideal gas term, virial term
+ */
+std::array<double, 7> euktpiv(const simulation &sim);
+
 } // namespace mmd
 
 #endif

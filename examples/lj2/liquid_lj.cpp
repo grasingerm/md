@@ -39,18 +39,14 @@ int main() {
           }
         }));
 
-  // store mass positions and velocities
-  sim.add_callback(save_values_with_time_callback("liquid_data.csv", 50 * dt, 
-        {
-          kinetic_energy, potential_energy, total_energy, temperature, pressure,
-          ideal_pressure, virial_pressure
-        }));
+  sim.add_callback(save_vector_with_time_callback<7>("liquid_data.csv", 50 * dt, 
+                   euktpiv));
 
-  sim.add_callback(print_energy_and_momentum_with_time_callback(1000*dt));
+  sim.add_callback(print_vector_with_time_callback<7>(cout, 1000*dt, euktpiv));
   sim.add_callback(save_xyz_callback("liquid_lj.xyz", 100*dt, positions));
 
   cout << "Running simulation for " << nsteps << " steps...\n\n";
-  cout << "time U K E=U+K |p|\n" << "==================\n";
+  cout << "time E=U+K U K T P Ideal Virial\n" << "==================\n";
 
   mprof::tic();
   sim.simulate(nsteps);
