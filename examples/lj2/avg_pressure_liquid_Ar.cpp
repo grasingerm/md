@@ -32,10 +32,17 @@ int main() {
     
     simulation sim(molecular_id::Test, "liquid256_init.xyz", density, &pot, dt, 
                    tstar, velocity_verlet_pbc, L);
-  
-    sim.add_mutator(equilibrate_temperature(tstar, 1e-2, 100));
-    //sim.add_callback(check_energy(50*dt, 1e-3));
-    sim.add_callback(check_momentum(50*dt, 1e-6));
+ 
+    // equilibrate system at 100K
+    sim.add_mutator(equilibrate_temperature(tstar, 1e-2, nsteps));
+    sim.add_callback(check_momentum(100*dt, 1e-6));
+    sim.simulate(nsteps / 10 - 100);
+    sim.clear_all_callbacks();
+    sim.add_mutator(raise_temperature(tstar, nsteps));
+    sim.simulate(100);
+    sim.clear_all_callbacks();
+    sim.reset_clock();
+
     sim.add_callback([&](const simulation& sim) {
       if (fmod(sim.get_time(), 1000*dt) < dt) {
         cout << "Density: " << density << ", " 
@@ -52,6 +59,8 @@ int main() {
         ++nsamples;
       }
     });
+    sim.add_callback(check_energy(1000*dt, 1e-3));
+    sim.add_callback(check_momentum(1000*dt, 1e-6));
 
     mprof::tic();
     sim.simulate(nsteps);

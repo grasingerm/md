@@ -96,7 +96,8 @@ simulation::simulation(const molecular_id id, const char *fname,
                        const double edge_length)
     : ma([](molecular_id) -> double { return 1.0; }),
       potentials(size_t{1}, pot), time_int(simulation::default_time_int),
-      dt(dt), t(0.0), volume(edge_length * edge_length * edge_length),
+      dt(dt), t(0.0), edge_length(edge_length), 
+      volume(edge_length * edge_length * edge_length),
       kB(simulation::default_kB) {
 
   ifstream infile(fname, ifstream::in);
@@ -175,7 +176,8 @@ simulation::simulation(const molecular_id id, const char *fname,
                        const double edge_length)
     : ma([](molecular_id) -> double { return 1.0; }),
       potentials(size_t{1}, pot), time_int(simulation::default_time_int),
-      dt(dt), t(0.0), volume(edge_length * edge_length * edge_length),
+      dt(dt), t(0.0), edge_length(edge_length), 
+      volume(edge_length * edge_length * edge_length),
       kB(simulation::default_kB) {
 
   const size_t N = static_cast<size_t>(std::round(density * get_volume()));
@@ -240,7 +242,8 @@ simulation::simulation(const molecular_id id, const double density,
                        const double tstar, const double edge_length)
     : ma([](molecular_id) -> double { return 1.0; }),
       potentials(size_t{1}, pot), time_int(simulation::default_time_int),
-      dt(dt), t(0.0), volume(edge_length * edge_length * edge_length),
+      dt(dt), t(0.0), edge_length(edge_length), 
+      volume(edge_length * edge_length * edge_length),
       kB(simulation::default_kB) {
 
   const size_t N = static_cast<size_t>(std::round(density * get_volume()));
@@ -342,7 +345,7 @@ double virial_pressure(const simulation &sim) {
     for (auto i = size_t{0}; i < n - 1; ++i)
       for (auto j = i + 1; j < n; ++j)
         // rij dot Fij
-        vp += dot(-rij_pbc(positions, i, j, sim.get_edge_length()),
+        vp += dot(rij_pbc(positions, i, j, sim.get_edge_length()),
                   potential->force_ij(sim.get_molecular_ids(),
                                       sim.get_positions(), i, j));
 

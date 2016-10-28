@@ -16,6 +16,16 @@ namespace mmd {
 mutator equilibrate_temperature(const double tstar, const double eps,
                                 const unsigned nsteps_eq = 1);
 
+/*! \brief Mutating callback that raises temperature if it falls below a value
+ *
+ * Mutating callback that raises initial temperature.
+ *
+ * \param   tstar      Non-dimensional temperature
+ * \param   nsteps_eq  Number of time steps that temperature should be steady
+ * \return             Mutator
+ */
+mutator raise_temperature(const double tstar, const unsigned nsteps_eq = 1);
+
 } // namespace mmd
 
 #endif

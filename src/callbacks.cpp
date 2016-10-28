@@ -15,21 +15,32 @@ inline bool _time_to_exec(const simulation &sim, const double dt) {
   return (fmod(sim.get_time(), dt) < sim.get_dt());
 }
 
-void save_xyz_callback::operator()(const simulation &sim) {
+void output_xyz(ostream &ostr, data_accessor da, const simulation &sim,
+                const bool prepend_id) {
 
-  if (_time_to_exec(sim, dt)) {
+  ostr << sim.get_molecular_ids().size() << '\n';
+  ostr << "time: " << sim.get_time() << '\n';
 
-    outfile << sim.get_molecular_ids().size() << '\n';
-    outfile << "time: " << sim.get_time() << '\n';
+  const auto &data = da(sim);
+  for (size_t j = 0; j < data.n_cols; ++j) {
+    unsigned start_idx = 0;
 
-    const auto &data = da(sim);
-    for (size_t j = 0; j < data.n_cols; ++j) {
-      outfile << as_integer(sim.get_molecular_ids()[j]);
-      for (unsigned i = 0; i < 3; ++i)
-        outfile << ' ' << data(i, j);
-      outfile << '\n';
+    if (prepend_id)
+      ostr << as_integer(sim.get_molecular_ids()[j]);
+    else {
+      start_idx = 1;
+      ostr << data(1, j);
     }
+
+    for (unsigned i = start_idx; i < 3; ++i)
+      ostr << ' ' << data(i, j);
+
+    ostr << '\n';
   }
+}
+
+void save_xyz_callback::operator()(const simulation &sim) {
+  if (_time_to_exec(sim, dt)) output_xyz(outfile, da, sim, prepend_id);
 }
 
 void save_values_with_time_callback::operator()(const simulation &sim) {
@@ -104,6 +115,17 @@ callback check_momentum(const double dt, const double eps) {
   };
 }
 
+callback print_time(const double dt, const char *msg) {
+
+  _check_dt(dt);
+
+  return [=](const simulation &sim) {
+    if (_time_to_exec(sim, dt)) {
+      std::cout << msg << "; time: " << sim.get_time();
+    }
+  };
+}
+
 callback print_profile(const double dt) {
 
   _check_dt(dt);
@@ -122,4 +144,5 @@ callback print_profile(const double dt) {
     }
   };
 }
+
 }

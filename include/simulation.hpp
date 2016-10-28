@@ -304,6 +304,22 @@ public:
    */
   inline double get_kB() const { return kB; }
 
+  /*! \brief Reset the clock
+   */
+  inline void reset_clock() { t = 0.0; }
+
+  /*! \brief Clear callbacks
+   */
+  inline void clear_callbacks() { callbacks.clear(); }
+
+  /*! \brief Clear mutators
+   */
+  inline void clear_mutators() { mutators.clear(); }
+
+  /*! \brief Clear mutators
+   */
+  inline void clear_all_callbacks() { clear_callbacks(); clear_mutators(); }
+
 private:
   std::vector<molecular_id> molecular_ids;
   mass_accessor ma;

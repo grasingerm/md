@@ -59,23 +59,27 @@ class save_xyz_callback {
 public:
   /*! \brief Constructor for callback function that saves data in xyz format
    *
-   * \param   fname   File name of the output file
-   * \param   dt      Frequency with which to write data
-   * \param   da      Function for accessing simulation data
+   * \param   fname       File name of the output file
+   * \param   dt          Frequency with which to write data
+   * \param   da          Function for accessing simulation data
+   * \param   prepend_id  Flag, if true prepend each row with molecular id
    * \return          Callback function
    */
-  save_xyz_callback(const char *fname, const double dt, data_accessor da)
-      : fname(fname), outfile(fname), dt(dt), da(da) {}
+  save_xyz_callback(const char *fname, const double dt, data_accessor da,
+                    const bool prepend_id=true)
+      : fname(fname), outfile(fname), dt(dt), da(da), prepend_id(prepend_id) {}
 
   /*! \brief Constructor for callback function that saves data in xyz format
    *
-   * \param   fname   File name of the output file
-   * \param   dt      Frequency with which to write data
-   * \param   da      Function for accessing simulation data
+   * \param   fname       File name of the output file
+   * \param   dt          Frequency with which to write data
+   * \param   da          Function for accessing simulation data
+   * \param   prepend_id  Flag, if true prepend each row with molecular id
    * \return          Callback function
    */
-  save_xyz_callback(const std::string &fname, const double dt, data_accessor da)
-      : fname(fname), outfile(fname), dt(dt), da(da) {}
+  save_xyz_callback(const std::string &fname, const double dt, data_accessor da,
+                    const bool prepend_id=true)
+      : fname(fname), outfile(fname), dt(dt), da(da), prepend_id(prepend_id) {}
 
   /*! \brief Copy constructor for callback function that saves data in xyz
    * format
@@ -84,7 +88,8 @@ public:
    * \return          Callback function
    */
   save_xyz_callback(const save_xyz_callback &cb)
-      : fname(cb.fname), outfile(cb.fname), dt(cb.dt), da(cb.da) {}
+      : fname(cb.fname), outfile(cb.fname), dt(cb.dt), da(cb.da), 
+        prepend_id(cb.prepend_id) {}
 
   ~save_xyz_callback() { outfile.close(); }
 
@@ -101,6 +106,7 @@ private:
   std::ofstream outfile;
   double dt;
   data_accessor da;
+  bool prepend_id;
 };
 
 /*! \brief Callback for saving data values to a delimited file
@@ -412,12 +418,43 @@ callback check_energy(const double dt, const double eps = 1e-6);
  */
 callback check_momentum(const double dt, const double eps = 1e-6);
 
+/*! \brief Print current simulation time
+ *
+ * \param   dt   Frequency with which to print profiling information
+ * \param   msg  Message to print
+ * \return       Callback
+ */
+callback print_time(const double dt, const char *msg=""); 
+
 /*! \brief Print time required to simulate dt time
  *
  * \param   dt  Frequency with which to print profiling information
  * \return      Callback
  */
 callback print_profile(const double dt);
+
+/*! \brief Outputs xyz data to an output stream in the xyz format
+ *
+ * \param   ostr        Output stream
+ * \param   da          Data accessor for xyz data
+ * \param   sim         Simulation object
+ * \param   prepend_id  Flag, if true prepend each row with molecular id
+ */
+void output_xyz(std::ostream &ostr, data_accessor da, const simulation &sim,
+                const bool prepend_id=true);
+
+/*! \brief Saves xyz data to a file in the xyz format
+ *
+ * \param   fname       Filename
+ * \param   da          Data accessor for xyz data
+ * \param   sim         Simulation object
+ * \param   prepend_id  Flag, if true prepend each row with molecular id
+ */
+inline void save_xyz(const char *fname, data_accessor da, 
+                     const simulation &sim, const bool prepend_id=true) {
+  std::ofstream outfile(fname, std::ios::out);
+  output_xyz(outfile, da, sim, prepend_id);
+}
 
 } // namespace mmd
 
