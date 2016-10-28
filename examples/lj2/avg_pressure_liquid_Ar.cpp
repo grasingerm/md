@@ -23,7 +23,6 @@ int main() {
 
   map<double, double> pressures;
 
-  #pragma omp parallel for schedule(dynamic)
   for (unsigned k = 0; k < num_sims; ++k) {
 
     const double density = k * drho + density_bounds[0];
@@ -44,7 +43,7 @@ int main() {
     sim.reset_clock();
 
     sim.add_callback([&](const simulation& sim) {
-      if (fmod(sim.get_time(), 1000*dt) < dt) {
+      if (fmod(sim.get_time(), 10000*dt) < dt) {
         cout << "Density: " << density << ", " 
              << sim.get_time() / total_time * 100 << "%\n";
       }
