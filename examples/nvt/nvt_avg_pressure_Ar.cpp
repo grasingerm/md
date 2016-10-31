@@ -10,30 +10,30 @@ using namespace mmd;
 
 int main() {
 
+  static const size_t N = 256;
   static const double dt = 0.002;
   static const double tau_T = 0.05;
   static const long long nsteps = 100000;
   static const double total_time = dt * nsteps;
-  static const double L = 6.8;
   static const double tstar = 100.0 / 121.0; /* Ar temperature scale is 121 K */
   static const double density_scale = 1686.85;
   static const array<double, 2> density_bounds { { 950.0 / density_scale, 
                                                    1150.0 / density_scale } };
-  static const size_t num_sims = 100;
+  static const size_t num_sims = 50;
   static const double drho = (density_bounds[1] - density_bounds[0]) / num_sims;
 
   map<double, double> pressures;
 
-  #pragma omp parallel for schedule(dynamic)
   for (unsigned k = 0; k < num_sims; ++k) {
 
     const double density = k * drho + density_bounds[0];
+    const double L = pow(static_cast<double>(N) / density, 1.0 / 3.0);
    
     const_well_params_LJ_cutoff_potential pot(1.0, 1.0, L, 2.5);
     nose_hoover_velocity_verlet_pbc time_int(tstar, tau_T); 
     
-    simulation sim(molecular_id::Test, "liquid256_init.xyz", density, &pot, dt, 
-                   tstar, time_int, L);
+    simulation sim(molecular_id::Test, "liquid256_init.xyz", &pot, dt, 
+                   time_int, L);
   
     sim.add_callback(check_momentum(50*dt, 1e-6));
     sim.add_callback([&](const simulation& sim) {
