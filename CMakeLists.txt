@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 
 project(md)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -g -std=c++14 -pedantic -pedantic-errors")
-set(CMAKE_CXX_FLAGS_RELEASE "-Wall -Wextra -std=c++14 -pedantic -pedantic-errors -O3")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++14")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -pedantic -pedantic-errors")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 # use OpenMP if compiler supports it
 find_package(OpenMP)
@@ -39,6 +40,9 @@ add_executable(pressure_Ar examples/lj2/avg_pressure_liquid_Ar.cpp)
 add_executable(nvt_liquid_lj examples/nvt/nvt_liquid_lj.cpp)
 add_executable(nvt_pressure_Ar examples/nvt/nvt_avg_pressure_Ar.cpp)
 add_executable(cv examples/nvt/cv.cpp)
+add_executable(qe1 examples/nvt/qe.cpp)
+add_executable(qe2 examples/nvt/qe2.cpp)
+add_executable(qe3 examples/nvt/qe3.cpp)
 
 if (UNIX)
     target_link_libraries(mmd m)
@@ -54,3 +58,6 @@ target_link_libraries(pressure_Ar armadillo mmd)
 target_link_libraries(nvt_liquid_lj armadillo mmd)
 target_link_libraries(nvt_pressure_Ar armadillo mmd)
 target_link_libraries(cv armadillo mmd)
+target_link_libraries(qe1 armadillo mmd)
+target_link_libraries(qe2 armadillo mmd)
+target_link_libraries(qe3 armadillo mmd)

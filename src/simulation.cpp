@@ -54,6 +54,49 @@ void _load_xyz(arma::mat &xyz, const char *fname) {
   infile.close();
 }
 
+void _load_xyz(arma::mat &xyz, const vector<molecular_id>& ids,
+               vector<molecular_id>& molecular_ids,
+               const char *fname) {
+  string line;
+  ifstream infile(fname, ifstream::in);
+
+  if (!infile.is_open())
+    throw invalid_argument(string("Could not open data file: ") +
+                           string(fname));
+
+  size_t n;
+  infile >> n;
+
+  if (n != xyz.n_cols)
+    throw invalid_argument(
+        string("Data file: ") + string(fname) +
+        string("does not contain the correct number of molecules. "
+               "Expected: ") +
+        to_string(xyz.n_cols) + string(", "
+                                       "found: ") +
+        to_string(n));
+
+  getline(infile, line); // read-in newline
+  getline(infile, line); // comment line
+
+  size_t i = 0;
+  double x, y, z;
+  const auto unique_ids = ids.size();
+
+  // read positions from file and initialize random velocities
+  while ((infile >> x >> y >> z) && i < n) {
+    xyz(0, i) = x;
+    xyz(1, i) = y;
+    xyz(2, i) = z;
+
+    molecular_ids[i] = ids[i % unique_ids];
+
+    ++i;
+  }
+
+  infile.close();
+}
+
 void _load_xyz(arma::mat &xyz, const char *fname, const size_t N) {
   string line;
   ifstream infile(fname, ifstream::in);
@@ -115,6 +158,30 @@ simulation::simulation(const molecular_id id, const char *fname,
   _load_xyz(positions, fname);
 }
 
+simulation::simulation(const std::vector<molecular_id>& ids, 
+           const mass_accessor& ma,
+           const char *fname, abstract_potential *pot, const double dt, 
+           const time_integrator &ti, const double edge_length) 
+    : ma(ma), potentials(size_t{1}, pot), time_int(ti), dt(dt), t(0.0), 
+      edge_length(edge_length), volume(edge_length * edge_length * edge_length),
+      kB(simulation::default_kB) {
+
+  ifstream infile(fname, ifstream::in);
+  size_t n;
+  infile >> n;
+  infile.close();
+
+  molecular_ids.resize(n);
+
+  // allocate memory for molecular degrees of freedom
+  positions.resize(3, n);
+  velocities.zeros(3, n);
+  forces.zeros(3, n);
+
+  _load_xyz(positions, ids, molecular_ids, fname);
+}
+
+
 void _init_rand_velocities(simulation &sim, const double &tstar) {
 
   mat &velocities = sim.get_velocities();
@@ -168,6 +235,17 @@ simulation::simulation(const molecular_id id, const char *fname,
     : simulation(id, fname, pot, dt, edge_length) {
 
   _init_rand_velocities(*this, tstar);
+}
+
+simulation::simulation(const std::vector<molecular_id>& ids, 
+           const mass_accessor& ma,
+           const char *fname, abstract_potential *pot, const double dt, 
+           const time_integrator &ti, const double tstar, 
+           const double edge_length) 
+    : simulation(ids, ma, fname, pot, dt, ti, edge_length) {
+
+  _init_rand_velocities(*this, tstar);
+
 }
 
 simulation::simulation(const molecular_id id, const char *fname,
@@ -320,7 +398,7 @@ double temperature(const simulation &sim) {
   return _temperature_kernel(kinetic_energy(sim), sim.get_N(), sim.get_kB());
 }
 
-inline double _ideal_pressure_kernel(const double temperature, const double N,
+inline double _ideal_pressure_kernel(const double temperature, const size_t N,
                                      const double volume, const double kB) {
   return N * temperature * kB / volume;
 }

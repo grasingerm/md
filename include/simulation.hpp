@@ -61,6 +61,41 @@ public:
 
   /*! \brief Simulation class with all molecules of the same type
    *
+   * \param   ids           Id of all molecules in the simulation
+   * \param   ma            Mass accessor
+   * \param   fname         Filename that contains positions of molecules
+   * \param   pot           Potential function that acts on molecules
+   * \param   dt            Time step size
+   * \param   ti            Time integrator
+   * \param   edge_length   Edge length of the control volume
+   * \return                Molecular simulation object
+   */
+  simulation(const std::vector<molecular_id>& ids, const mass_accessor& ma,
+             const char *fname, 
+             abstract_potential *pot, const double dt, 
+             const time_integrator &ti,
+             const double edge_length);
+
+  /*! \brief Simulation class with all molecules of the same type
+   *
+   * \param   ids           Id of all molecules in the simulation
+   * \param   ma            Mass accessor
+   * \param   fname         Filename that contains positions of molecules
+   * \param   pot           Potential function that acts on molecules
+   * \param   dt            Time step size
+   * \param   ti            Time integrator
+   * \param   tstar         Initial temperature
+   * \param   edge_length   Edge length of the control volume
+   * \return                Molecular simulation object
+   */
+  simulation(const std::vector<molecular_id>& ids, const mass_accessor& ma,
+             const char *fname, 
+             abstract_potential *pot, const double dt, 
+             const time_integrator &ti, const double tstar,
+             const double edge_length);
+
+  /*! \brief Simulation class with all molecules of the same type
+   *
    * \param   id            Id of all molecules in the simulation
    * \param   fname         Filename that contains positions of molecules
    * \param   pot           Potential function that acts on molecules
@@ -319,6 +354,10 @@ public:
   /*! \brief Clear mutators
    */
   inline void clear_all_callbacks() { clear_callbacks(); clear_mutators(); }
+
+  /*! \brief Set time integrator
+   */
+  inline void set_time_int(const time_integrator &ti) { time_int = ti; }
 
 private:
   std::vector<molecular_id> molecular_ids;
