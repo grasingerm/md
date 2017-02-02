@@ -17,9 +17,9 @@ int main() {
   static const double total_time = dt * nsteps;
   static const double tstar = 90.0 / 121.0; /* Ar temperature scale is 121 K */
   static const double density_scale = 1686.85;
-  static const array<double, 2> density_bounds { { 1200.0 / density_scale, 
-                                                   2200.0 / density_scale } };
-  static const size_t num_sims = 10;
+  static const array<double, 2> density_bounds { { 1700.0 / density_scale, 
+                                                   1900.0 / density_scale } };
+  static const size_t num_sims = 20;
   static const double drho = (density_bounds[1] - density_bounds[0]) / num_sims;
 
   map<double, double> pressures;

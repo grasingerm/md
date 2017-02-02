@@ -27,3 +27,8 @@ build/
 
 *.csv
 *.bak
+
+examples/*/*.png
+examples/*/*.ods
+examples/*/*.csv
+examples/*/*.xyz
