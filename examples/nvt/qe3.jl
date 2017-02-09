@@ -2,9 +2,10 @@ const L = 7.16636
 
 ccount(s, c) = length(split(s, c)) - 1;
 
-open("qe3.csv", "w") do w
+for i=1:10
+open("qe3_$i.csv", "w") do w
   write(w, "time,d1x,d1y,d1z,d1,d2x,d2y,d2z,d2,D1X,D1Y,D1Z,D1,D2X,D2Y,D2Z,D2\n");
-  open("qe3.xyz") do f
+  open("qe3_$i.xyz") do f
 
     idx = 1
     r_curr = zeros(3, 256);
@@ -66,4 +67,5 @@ open("qe3.csv", "w") do w
       end
     end
   end
+end
 end

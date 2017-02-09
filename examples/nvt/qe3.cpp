@@ -12,10 +12,11 @@ using namespace arma;
 
 int main() {
 
+  static const size_t ntrials = 10;
   static const size_t N = 256;
   static const double dt = 0.002;
   static const double tau_T = 0.05;
-  static const long long nsteps = 100000;
+  static const long long nsteps = 75000;
   static const double tstar = 90.0 / 121.0; /* Ar temperature scale is 121 K */
   static const double density_scale = 1686.85;
 
@@ -32,31 +33,33 @@ int main() {
   cout << "L: " << L << '\n';
  
   const_well_params_LJ_cutoff_potential pot(1.0, 1.0, L, 2.5);
-
-  // initialize simulation with NVT time integration to equilibrate at 90K
   nose_hoover_velocity_verlet_pbc time_int_nvt(tstar, tau_T); 
   simulation sim({molecular_id::Test1, molecular_id::Test2}, ma, 
                  "liquid256_init.xyz", &pot, dt, 
                  time_int_nvt, L);
 
-  sim.simulate(nsteps / 2);
-  sim.set_time_int(velocity_verlet_pbc);
-  // now, switch time integrator to NVE ensemble
-  sim.simulate(nsteps / 20);
-  sim.reset_clock();
+  for (size_t trial = 0; trial < ntrials; ++trial) {
+    // initialize simulation with NVT time integration to equilibrate at 90K
+    sim.set_time_int(time_int_nvt);
+    sim.simulate(nsteps / 2);
 
-  sim.set_time_int(velocity_verlet_pbc);
+    // now, switch time integrator to NVE ensemble
+    sim.set_time_int(velocity_verlet_pbc);
+    sim.simulate(nsteps / 20);
+    sim.reset_clock();
 
-  sim.add_callback(check_momentum(500*dt, 1e-3));
-  sim.add_callback(save_xyz_callback("qe3.xyz", 10 * dt, positions));
-  
-  sim.add_callback(print_vector_with_time_callback<7>(cout, 1000*dt, euktpiv));
-  cout << "Running simulation for " << nsteps << " steps...\n\n";
-  cout << "time E=U+K U K T P I V\n" << "======================\n";
+    sim.add_callback(check_momentum(500*dt, 1e-3));
+    sim.add_callback(save_xyz_callback(string("qe3_") + to_string(trial)
+          + string(".xyz"), 10 * dt, positions));
+    
+    sim.add_callback(print_vector_with_time_callback<7>(cout, 1000*dt, euktpiv));
+    cout << "Running simulation for " << nsteps << " steps...\n\n";
+    cout << "time E=U+K U K T P I V\n" << "======================\n";
 
-  mprof::tic();
-  sim.simulate(nsteps);
-  mprof::toc();
+    mprof::tic();
+    sim.simulate(nsteps);
+    mprof::toc();
+  }
 
   return 0;
 }
