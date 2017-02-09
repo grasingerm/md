@@ -37,8 +37,13 @@ int main() {
   simulation sim({molecular_id::Test1, molecular_id::Test2}, ma, 
                  "liquid256_init.xyz", &pot, dt, 
                  time_int_nvt, L);
+  sim.add_callback(print_vector_with_time_callback<7>(cout, 1000*dt, euktpiv));
 
   for (size_t trial = 0; trial < ntrials; ++trial) {
+    cout << "\n######################\n\tTrial:\t " << trial+1 
+         << "\n######################\n\n";
+    cout << "Initializing for " << nsteps / 2 + nsteps / 20 << " steps...\n\n";
+    cout << "time E=U+K U K T P I V\n" << "======================\n";
     // initialize simulation with NVT time integration to equilibrate at 90K
     sim.set_time_int(time_int_nvt);
     sim.simulate(nsteps / 2);
@@ -52,7 +57,6 @@ int main() {
     sim.add_callback(save_xyz_callback(string("qe3_") + to_string(trial)
           + string(".xyz"), 10 * dt, positions));
     
-    sim.add_callback(print_vector_with_time_callback<7>(cout, 1000*dt, euktpiv));
     cout << "Running simulation for " << nsteps << " steps...\n\n";
     cout << "time E=U+K U K T P I V\n" << "======================\n";
 
