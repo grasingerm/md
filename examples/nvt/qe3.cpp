@@ -18,6 +18,7 @@ int main() {
   static const long long nsteps = 100000;
   static const double tstar = 90.0 / 121.0; /* Ar temperature scale is 121 K */
   static const double density_scale = 1686.85;
+  static const double pressure_scale = 42;
 
   // Half ot the molecules have a dimensionless mass of 1.0, the other half
   // have a dimensionless mass of 2.0
@@ -39,16 +40,27 @@ int main() {
                  "liquid256_init.xyz", &pot, dt, 
                  time_int_nvt, L);
 
-  sim.simulate(nsteps / 2);
-  sim.set_time_int(velocity_verlet_pbc);
-  // now, switch time integrator to NVE ensemble
-  sim.simulate(nsteps / 20);
+  sim.simulate(nsteps / 5);
   sim.reset_clock();
 
+  // now, switch to NVE
   sim.set_time_int(velocity_verlet_pbc);
+  sim.simulate(nsteps * 5);
+  sim.reset_clock();
 
   sim.add_callback(check_momentum(500*dt, 1e-3));
-  sim.add_callback(save_xyz_callback("qe3.xyz", 10 * dt, positions));
+  sim.add_callback(save_xyz_callback("qe3.xyz", 5 * dt, positions));
+  
+  double pressure_sum;
+  double temperature_sum;
+  size_t nsamples = 0;
+  sim.add_callback([&](const simulation& sim) {
+        if (fmod(sim.get_time(), 10*dt) < dt) {
+          pressure_sum += pressure(sim);
+          temperature_sum += temperature(sim);
+          ++nsamples;
+        }
+  });
   
   sim.add_callback(print_vector_with_time_callback<7>(cout, 1000*dt, euktpiv));
   cout << "Running simulation for " << nsteps << " steps...\n\n";
@@ -57,6 +69,9 @@ int main() {
   mprof::tic();
   sim.simulate(nsteps);
   mprof::toc();
+  
+  cout << "\n<P> = " << pressure_sum / nsamples * pressure_scale << '\n';
+  cout << "<T> = " << temperature_sum / nsamples * 121.0 << '\n';
 
   return 0;
 }
