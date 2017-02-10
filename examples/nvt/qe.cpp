@@ -10,6 +10,8 @@ using namespace mmd;
 
 int main() {
 
+  ofstream pos("pressures.csv", ofstream::out);
+
   static const size_t N = 256;
   static const double dt = 0.002;
   static const double tau_T = 0.05;
@@ -36,6 +38,7 @@ int main() {
     const double density = k * drho + density_bounds[0];
     // average mass of a molecule is 1.5
     const double L = pow(1.5 * static_cast<double>(N) / density, 1.0 / 3.0);
+    pos << density;
    
     const_well_params_LJ_cutoff_potential pot(1.0, 1.0, L, 2.5);
     nose_hoover_velocity_verlet_pbc time_int(tstar, tau_T); 
@@ -62,6 +65,7 @@ int main() {
       if (fmod(sim.get_time(), 5*dt) < dt) {
         auto values = euktpiv(sim);
         pressure_sum += values[4];
+        pos << values[4] << ',';
         ++nsamples;
       }
     });
@@ -73,6 +77,7 @@ int main() {
 
     pressures[density] = pressure_sum / nsamples;
 
+    pos << '\n';
   }
 
   ofstream outfile("pressure_data.csv", ofstream::out);

@@ -2,9 +2,9 @@ using DataFrames
 using PyPlot
 using GLM
 
-D1s = zeros(10);
-D2s = zeros(10);
-for i = 0:9
+D1s = zeros(100);
+D2s = zeros(100);
+for i = 0:99
   d, hds = readdlm("qe3_$i.csv", ','; header=true);
   times = vec(d[:, 1]);
   plot(times, vec(d[:, 2]), "-",
@@ -35,10 +35,10 @@ for i = 0:9
   clf();
 
   d = readtable("qe3_$i.csv");
-  lm1 = lm(d1 ~ time, d);
+  lm1 = lm(d1 ~ time + 0, d);
   println("coeffs for D1: $(coef(lm1))");
   D1s[i+1] = coef(lm1)[2];
-  lm2 = lm(d2 ~ time, d);
+  lm2 = lm(d2 ~ time + 0, d);
   println("coeffs for D2: $(coef(lm2))");
   D2s[i+1] = coef(lm2)[2];
 end

@@ -2,7 +2,7 @@ const L = 7.16636
 
 ccount(s, c) = length(split(s, c)) - 1;
 
-for i=0:9
+for i=0:99
   open("qe3_$i.csv", "w") do w
     write(w, "time,d1x,d1y,d1z,d1,d2x,d2y,d2z,d2\n");
     open("qe3_$i.xyz") do f
