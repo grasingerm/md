@@ -12,11 +12,11 @@ using namespace arma;
 
 int main() {
 
-  static const size_t ntrials = 100;
+  static const size_t ntrials = 3;
   static const size_t N = 256;
   static const double dt = 0.002;
   static const double tau_T = 0.05;
-  static const long long nsteps = 10000;
+  static const long long nsteps = 75000;
   static const double tstar = 90.0 / 121.0; /* Ar temperature scale is 121 K */
   static const double density_scale = 1686.85;
   static const double pressure_scale = 42;

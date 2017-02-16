@@ -37,10 +37,10 @@ for i = 0:99
   d = readtable("qe3_$i.csv");
   lm1 = lm(d1 ~ time + 0, d);
   println("coeffs for D1: $(coef(lm1))");
-  D1s[i+1] = coef(lm1)[2];
+  D1s[i+1] = coef(lm1)[1];
   lm2 = lm(d2 ~ time + 0, d);
   println("coeffs for D2: $(coef(lm2))");
-  D2s[i+1] = coef(lm2)[2];
+  D2s[i+1] = coef(lm2)[1];
 end
 
 println("avgs");
