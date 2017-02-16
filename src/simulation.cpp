@@ -7,6 +7,7 @@
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <cstdio>
 
 namespace mmd {
 
@@ -15,6 +16,14 @@ using namespace arma;
 
 // default time integration scheme
 const time_integrator simulation::default_time_int = velocity_verlet;
+
+inline void assert_file_exists(const char* fname) {
+  if (FILE *f = fopen(fname, "r"))
+    fclose(f);
+  else 
+    throw invalid_argument(string("Could not open data file: ") +
+                           string(fname));
+}
 
 void _load_xyz(arma::mat &xyz, const char *fname) {
   string line;
@@ -143,6 +152,7 @@ simulation::simulation(const molecular_id id, const char *fname,
       volume(edge_length * edge_length * edge_length),
       kB(simulation::default_kB) {
 
+  assert_file_exists(fname);
   ifstream infile(fname, ifstream::in);
   size_t n;
   infile >> n;
@@ -166,6 +176,7 @@ simulation::simulation(const std::vector<molecular_id>& ids,
       edge_length(edge_length), volume(edge_length * edge_length * edge_length),
       kB(simulation::default_kB) {
 
+  assert_file_exists(fname);
   ifstream infile(fname, ifstream::in);
   size_t n;
   infile >> n;

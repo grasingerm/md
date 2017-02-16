@@ -42,7 +42,8 @@ int main() {
   double pressure_sum = 0;
   double temperature_sum = 0;
   size_t nsamples = 0;
-  
+  mat travelled(sim.get_positions());
+  mat mean_sqs(3, 2);
 
   for (size_t trial = 0; trial < ntrials; ++trial) {
     sim.add_callback(print_vector_with_time_callback<7>(cout, 1000*dt, euktpiv));
@@ -59,11 +60,48 @@ int main() {
     sim.simulate(nsteps / 20);
     sim.reset_clock();
 
+    ofstream os(string("qe_") + to_string(trial) + string(".csv"));
+    mat prev_positions(sim.get_positions());
+    travelled.zeros();
+
     sim.add_callback([&](const simulation& sim) {
         if (fmod(sim.get_time(), 10*dt) < dt) {
           pressure_sum += pressure(sim);
           temperature_sum += temperature(sim);
           ++nsamples;
+
+          const auto& positions = sim.get_positions();
+          const auto& ids = sim.get_molecular_ids();
+
+          os << sim.get_time();
+          for (size_t k = 0; k < sim.get_N(); ++k) {
+            vec dr = positions.col(k) - prev_positions.col(k);
+            for (unsigned i = 0; i < 3; ++i) {
+              if (dr(i) >= L / 2) {
+                dr(i) -= L;
+              }
+              else if(dr(i) <= -L / 2) {
+                dr(i) += L;
+              }
+              travelled(i, k) += dr(i);
+              if (ids[k] == molecular_id::Test1) {
+                mean_sqs(i, 0) += travelled(i, k) * travelled(i, k);
+              }
+              else {
+                mean_sqs(i, 1) += travelled(i, k) * travelled(i, k);
+              }
+            }
+          }
+          for (unsigned j = 0; j < 2; ++j) {
+            double sum = 0.0;
+            for (unsigned i = 0; i < 3; ++i) {
+              os << ',' <<  mean_sqs(i, j);
+              sum += mean_sqs(i, j);
+            }
+            os << ',' << sum / 3.0;
+          }
+          os << '\n';
+          prev_positions = sim.get_positions();
         }
     });
     sim.add_callback(check_momentum(500*dt, 1e-3));
